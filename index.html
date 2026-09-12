@@ -797,7 +797,7 @@
         .map(e => ({ e, score: scoreSim(q, e) }))
         .filter(x => x.score >= 0.25)
         .sort((a, b) => b.score - a.score)
-        .slice(0, 3);
+        .slice(0, 2);
     }
     function mockAnswer(q, hits) {
       if (!hits.length) return "暂无相关个人资料";

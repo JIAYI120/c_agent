@@ -572,7 +572,7 @@ class _ChatScreenState extends State<ChatScreen> {
     }).where((x) => (x['score'] as double) >= 0.25).toList()
       ..sort((a, b) => (b['score'] as double).compareTo(a['score'] as double));
 
-    return scored.take(3).map((x) => x['entry'] as Map<String, dynamic>).toList();
+    return scored.take(2).map((x) => x['entry'] as Map<String, dynamic>).toList();
   }
 
   Future<void> _send() async {
