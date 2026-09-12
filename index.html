@@ -676,26 +676,24 @@
       </div>
     </div>
 
-    <!-- 问答设置弹窗 -->
-    <div class="modal-overlay" id="settingsOverlay">
-      <div class="modal" style="width: 80%; max-width: 300px;">
-        <div class="modal-header">
-          <h3>问答设置</h3>
-          <button class="modal-close" id="settingsClose">×</button>
+    <!-- 问答设置弹窗 - iOS底部Sheet -->
+    <div class="sheet-backdrop" id="settingsBd"></div>
+    <div class="sheet" id="settingsSheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <button class="cancel" id="settingsClose">取消</button>
+        <h3>问答设置</h3>
+        <button class="save" id="saveSettings">保存</button>
+      </div>
+      <div class="sheet-body">
+        <label class="field">显示名称</label>
+        <input class="f" id="settingsName" placeholder="输入名称" maxlength="20" />
+        <label class="field">背景图片</label>
+        <div style="display: flex; gap: 10px; margin-top: 4px;">
+          <button class="btn" id="uploadBg" style="flex:1; margin:0;">选择图片</button>
+          <button class="btn" id="clearBg" style="flex:1; margin:0;">清除背景</button>
         </div>
-        <div style="padding: 16px;">
-          <label class="field">显示名称</label>
-          <input class="f" id="settingsName" placeholder="例如：小明的助手" maxlength="20" />
-          <label class="field">背景图片</label>
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <button class="btn" id="uploadBg" style="flex:1; margin:0;">选择图片</button>
-            <button class="btn" id="clearBg" style="flex:1; margin:0;">清除背景</button>
-          </div>
-          <input type="file" id="bgFileInput" accept="image/*" style="display:none;" />
-          <div style="margin-top: 16px;">
-            <button class="btn primary" id="saveSettings" style="width:100%; margin:0; background: var(--accent); color: #fff;">保存</button>
-          </div>
-        </div>
+        <input type="file" id="bgFileInput" accept="image/*" style="display:none;" />
       </div>
     </div>
   </div>
@@ -834,10 +832,15 @@
 
     $("#settingsBtn").addEventListener("click", () => {
       $("#settingsName").value = chatName;
-      $("#settingsOverlay").classList.add("open");
+      $("#settingsBd").classList.add("open");
+      requestAnimationFrame(() => $("#settingsSheet").classList.add("open"));
     });
-    $("#settingsClose").addEventListener("click", () => $("#settingsOverlay").classList.remove("open"));
-    $("#settingsOverlay").addEventListener("click", (e) => { if (e.target === e.currentTarget) $("#settingsOverlay").classList.remove("open"); });
+    function closeSettings() {
+      $("#settingsSheet").classList.remove("open");
+      setTimeout(() => $("#settingsBd").classList.remove("open"), 380);
+    }
+    $("#settingsClose").addEventListener("click", closeSettings);
+    $("#settingsBd").addEventListener("click", closeSettings);
 
     $("#uploadBg").addEventListener("click", () => $("#bgFileInput").click());
     $("#bgFileInput").addEventListener("change", (e) => {
@@ -862,7 +865,7 @@
     $("#saveSettings").addEventListener("click", () => {
       chatName = $("#settingsName").value.trim() || "贝贝";
       localStorage.setItem("chatName", chatName);
-      $("#settingsOverlay").classList.remove("open");
+      closeSettings();
       toast("设置已保存");
     });
 
