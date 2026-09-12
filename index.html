@@ -173,12 +173,12 @@
     .row-item .desc { font-size: 14px; color: var(--text3); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .row-item .chevron { color: rgba(255,255,255,0.12); font-size: 18px; margin-left: 10px; }
     .row-item .meta { display: flex; gap: 6px; margin-top: 7px; }
-    /* Pagination island - fixed bottom right */
+    /* Pagination island - fixed bottom right of phone */
     .pagination-wrap {
       position: absolute;
-      bottom: 18px;
+      bottom: 80px;
       right: 16px;
-      z-index: 10;
+      z-index: 15;
       pointer-events: none;
     }
     .pagination {
@@ -558,7 +558,6 @@
           <button class="fchip" data-cat="other">其它</button>
         </div>
         <div id="entryList"></div>
-        <div class="pagination-wrap" id="paginationWrap"></div>
       </section>
       <section class="screen" id="screen-chat">
         <div class="chat-wrap">
@@ -566,6 +565,8 @@
         </div>
       </section>
     </main>
+    <!-- 分页岛 - 固定在主内容区右下角 -->
+    <div class="pagination-wrap" id="paginationWrap"></div>
     <div class="tabbar-wrap">
       <div class="tabbar">
         <button class="tab active" data-screen="entries">
