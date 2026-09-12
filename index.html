@@ -538,13 +538,19 @@
     const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
     const seed = [
       { id: 1, title: "基本信息", cat: "info", body: "身高 175cm，血型 O。目标是保持体脂稳定，优先规律作息。", status: "ready", updated: fmt(now) },
-      { id: 2, title: "体重记录-上个月", cat: "info", body: "体重 75斤。", status: "ready", updated: fmt(new Date(now.getTime() - 30*24*60*60*1000)) },
-      { id: 3, title: "体重记录-上周", cat: "info", body: "体重 80斤。", status: "ready", updated: fmt(new Date(now.getTime() - 7*24*60*60*1000)) },
-      { id: 4, title: "体重记录-今天", cat: "info", body: "体重 90斤。", status: "ready", updated: fmt(now) },
-      { id: 5, title: "饮食喜好", cat: "like", body: "不吃香菜。偏好清淡中餐，早餐常喝燕麦牛奶。对花生过敏。", status: "ready", updated: fmt(new Date(now.getTime() - 1*24*60*60*1000)) },
-      { id: 6, title: "本周日程", cat: "plan", body: "周三 19:30 牙医复诊；周五下午产品评审；周日想整理房间。", status: "ready", updated: fmt(new Date(now.getTime() - 3*24*60*60*1000)) },
-      { id: 7, title: "生理期记录-8月", cat: "info", body: "2025-08-03开始，周期约 28 天，经期 5 天左右。", status: "ready", updated: "2025-08-03 10:00" },
-      { id: 8, title: "生理期记录-9月", cat: "info", body: "2025-09-04开始，周期约 28 天，经期 5 天左右。", status: "ready", updated: "2025-09-04 10:00" }
+      { id: 2, title: "体重记录-1月", cat: "info", body: "体重 65斤。", status: "ready", updated: "2025-01-15 10:00" },
+      { id: 3, title: "体重记录-2月", cat: "info", body: "体重 67斤。", status: "ready", updated: "2025-02-15 10:00" },
+      { id: 4, title: "体重记录-3月", cat: "info", body: "体重 70斤。", status: "ready", updated: "2025-03-15 10:00" },
+      { id: 5, title: "体重记录-4月", cat: "info", body: "体重 72斤。", status: "ready", updated: "2025-04-15 10:00" },
+      { id: 6, title: "体重记录-5月", cat: "info", body: "体重 74斤。", status: "ready", updated: "2025-05-15 10:00" },
+      { id: 7, title: "体重记录-6月", cat: "info", body: "体重 76斤。", status: "ready", updated: "2025-06-15 10:00" },
+      { id: 8, title: "体重记录-7月", cat: "info", body: "体重 78斤。", status: "ready", updated: "2025-07-15 10:00" },
+      { id: 9, title: "体重记录-上周", cat: "info", body: "体重 80斤。", status: "ready", updated: fmt(new Date(now.getTime() - 7*24*60*60*1000)) },
+      { id: 10, title: "体重记录-今天", cat: "info", body: "体重 90斤。", status: "ready", updated: fmt(now) },
+      { id: 11, title: "饮食喜好", cat: "like", body: "不吃香菜。偏好清淡中餐，早餐常喝燕麦牛奶。对花生过敏。", status: "ready", updated: fmt(new Date(now.getTime() - 1*24*60*60*1000)) },
+      { id: 12, title: "本周日程", cat: "plan", body: "周三 19:30 牙医复诊；周五下午产品评审；周日想整理房间。", status: "ready", updated: fmt(new Date(now.getTime() - 3*24*60*60*1000)) },
+      { id: 13, title: "生理期记录-8月", cat: "info", body: "2025-08-03开始，周期约 28 天，经期 5 天左右。", status: "ready", updated: "2025-08-03 10:00" },
+      { id: 14, title: "生理期记录-9月", cat: "info", body: "2025-09-04开始，周期约 28 天，经期 5 天左右。", status: "ready", updated: "2025-09-04 10:00" }
     ];
     let entries = [...seed];
     let filter = "info";
