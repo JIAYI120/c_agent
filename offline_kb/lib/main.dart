@@ -119,7 +119,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final titles = ['资料', '问答'];
-    final subs = ['本地知识库', '只根据你的资料回答'];
+    final subs = ['', ''];
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -208,23 +208,12 @@ class _MainScreenState extends State<MainScreen> {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
             child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(42),
-                border: Border(top: BorderSide(color: Colors.white.withOpacity(0.07), width: 0.5)),
-              ),
-              child: BottomNavigationBar(
-                currentIndex: _currentIndex,
-                onTap: (i) => setState(() => _currentIndex = i),
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                selectedItemColor: const Color(0xFF0a84ff),
-                unselectedItemColor: Colors.white.withOpacity(0.3),
-                selectedFontSize: 10,
-                unselectedFontSize: 10,
-                type: BottomNavigationBarType.fixed,
-                items: const [
-                  BottomNavigationBarItem(icon: Icon(Icons.description_outlined, size: 22), label: '资料'),
-                  BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline, size: 22), label: '问答'),
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _tabIcon(0, Icons.rectangle_rounded),
+                  _tabIcon(1, Icons.chat_bubble_outline_rounded),
                 ],
               ),
             ),
@@ -271,12 +260,12 @@ class _EntriesScreenState extends State<EntriesScreen> {
       _filter == 'all' ? _entries : _entries.where((e) => e['category'] == _filter).toList();
 
   final Map<String, Map<String, dynamic>> _catMeta = {
-    'profile': {'name': '档案', 'icon': Icons.person, 'color': const Color(0xFF0a84ff)},
-    'period': {'name': '姨妈', 'icon': Icons.favorite, 'color': const Color(0xFFff453a)},
-    'schedule': {'name': '日程', 'icon': Icons.calendar_today, 'color': const Color(0xFFff9f0a)},
-    'preference': {'name': '偏好', 'icon': Icons.eco, 'color': const Color(0xFF30d158)},
-    'note': {'name': '笔记', 'icon': Icons.edit_note, 'color': const Color(0xFFbf5af2)},
-    'other': {'name': '其他', 'icon': Icons.description, 'color': const Color(0xFFbf5af2)},
+    'profile': {'name': '档案', 'icon': Icons.horizontal_rule, 'color': const Color(0xFF0a84ff)},
+    'period': {'name': '姨妈', 'icon': Icons.circle_outlined, 'color': const Color(0xFFff453a)},
+    'schedule': {'name': '日程', 'icon': Icons.crop_square_rounded, 'color': const Color(0xFFff9f0a)},
+    'preference': {'name': '偏好', 'icon': Icons.diamond_outlined, 'color': const Color(0xFF30d158)},
+    'note': {'name': '笔记', 'icon': Icons.change_history_outlined, 'color': const Color(0xFFbf5af2)},
+    'other': {'name': '其他', 'icon': Icons.circle, 'color': const Color(0xFFbf5af2)},
   };
 
   @override
