@@ -37,8 +37,10 @@
     }
     html::-webkit-scrollbar, body::-webkit-scrollbar,
     .screen::-webkit-scrollbar, .chat-log::-webkit-scrollbar,
-    .filters::-webkit-scrollbar, .sheet::-webkit-scrollbar { display: none; }
-    html, body, .screen, .chat-log, .filters, .sheet { scrollbar-width: none; }
+    .filters::-webkit-scrollbar, .sheet::-webkit-scrollbar,
+    .detail-panel::-webkit-scrollbar, #modalList::-webkit-scrollbar { display: none; }
+    html, body, .screen, .chat-log, .filters, .sheet,
+    .detail-panel, #modalList { scrollbar-width: none; -ms-overflow-style: none; }
     body {
       display: flex; align-items: center; justify-content: center;
       min-height: 100dvh;
@@ -275,10 +277,7 @@
       overflow-y: auto;
       flex: 1;
       -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
     }
-    #modalList::-webkit-scrollbar { display: none; }
     .modal-item {
       padding: 12px 16px;
       border-bottom: 0.5px solid var(--sep);
