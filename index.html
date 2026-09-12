@@ -962,14 +962,28 @@
       const parts = body.split(/[；;。\n]/).filter(s => s.trim());
       if (parts.length <= 1) return body;
 
+      // 时间理解：这个月/上个月/下个月
+      const now = new Date();
+      const monthMap = {
+        "这个月": now.getMonth() + 1,
+        "本月": now.getMonth() + 1,
+        "上个月": now.getMonth() === 0 ? 12 : now.getMonth(),
+        "下个月": now.getMonth() === 11 ? 1 : now.getMonth() + 2,
+      };
+      const monthKeywords = [];
+      Object.entries(monthMap).forEach(([key, month]) => {
+        if (q.includes(key)) {
+          monthKeywords.push(`${month}月`);
+          monthKeywords.push(`${month}日`);
+        }
+      });
+
       // 提取有意义的关键词（2字以上）
       const stopWords = "的了吗呢吧啊哦呀这那什么有为是否将就把被让给对从在";
-      const keywords = [];
-      // 从同义词表找匹配的key
+      const keywords = [...monthKeywords];
       Object.keys(synonyms).forEach(k => {
         if (q.includes(k) && k.length >= 2) keywords.push(k);
       });
-      // 从q提取2字以上的词
       for (let i = 0; i < q.length - 1; i++) {
         const word = q.slice(i, i + 2);
         if (!stopWords.includes(word[0]) && !stopWords.includes(word[1])) {
