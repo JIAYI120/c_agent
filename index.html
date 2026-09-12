@@ -154,15 +154,19 @@
       text-align: center;
     }
     .fchip.on { background: var(--accent); color: #fff; box-shadow: 0 2px 14px rgba(10,132,255,0.30); }
-    .entry-group { margin: 0 16px 16px; border-radius: var(--r-card); overflow: hidden; }
+    .entry-group { margin: 0 16px 16px; border-radius: var(--r-card); overflow: visible; }
     .row-item {
       display: flex; align-items: center;
       padding: 14px 16px;
-      border-bottom: 0.5px solid var(--sep);
+      margin-bottom: 10px;
+      background: var(--glass);
+      backdrop-filter: blur(50px) saturate(200%);
+      border-radius: 16px;
+      border: 0.5px solid var(--glass-border);
       cursor: pointer;
       transition: background 0.12s;
     }
-    .row-item:last-child { border-bottom: none; }
+    .row-item:last-child { margin-bottom: 0; }
     .row-item:active { background: rgba(255,255,255,0.02); }
     .row-item .body { flex: 1; min-width: 0; }
     .row-item .title { font-size: 17px; margin: 0 0 3px; }
