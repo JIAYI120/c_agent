@@ -860,6 +860,8 @@
         $("#deleteModeBtn").style.display = id === "entries" ? "block" : "none";
         $("#settingsBtn").style.display = id === "chat" ? "block" : "none";
         $("#chatIslands").classList.toggle("hidden", id !== "chat");
+        // 换页岛只在资料页显示
+        document.getElementById("paginationWrap").style.display = id === "entries" ? "block" : "none";
         // 退出删除模式
         if (id !== "entries") {
           deleteMode = false;
