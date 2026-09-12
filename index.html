@@ -26,9 +26,7 @@
       --r-card: 16px;
       --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", sans-serif;
     }
-
     *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
     html, body {
       margin: 0; padding: 0; height: 100%;
       background: var(--bg);
@@ -37,20 +35,15 @@
       overscroll-behavior: none;
       -webkit-font-smoothing: antialiased;
     }
-
     html::-webkit-scrollbar, body::-webkit-scrollbar,
     .screen::-webkit-scrollbar, .chat-log::-webkit-scrollbar,
-    .filters::-webkit-scrollbar, .sheet::-webkit-scrollbar {
-      display: none;
-    }
+    .filters::-webkit-scrollbar, .sheet::-webkit-scrollbar { display: none; }
     html, body, .screen, .chat-log, .filters, .sheet { scrollbar-width: none; }
-
     body {
       display: flex; align-items: center; justify-content: center;
       min-height: 100dvh;
       background: linear-gradient(160deg, #060608 0%, #000 40%, #020210 100%);
     }
-
     #phone {
       width: min(100vw, 430px);
       height: min(100dvh, 932px);
@@ -60,8 +53,6 @@
       flex-direction: column;
       overflow: hidden;
     }
-
-    /* Ambient light glow */
     #phone::before {
       content: "";
       position: absolute;
@@ -70,20 +61,14 @@
       background: radial-gradient(circle, rgba(10,132,255,0.06) 0%, transparent 70%);
       pointer-events: none; z-index: 0;
     }
-
     @media (min-width: 440px) and (min-height: 720px) {
       body { padding: 20px; }
       #phone {
         border-radius: 52px;
         border: 0.5px solid rgba(255,255,255,0.06);
-        box-shadow:
-          0 0 0 1px rgba(255,255,255,0.03),
-          0 40px 100px rgba(0,0,0,0.65),
-          inset 0 0.5px 0 rgba(255,255,255,0.05);
+        box-shadow: 0 0 0 1px rgba(255,255,255,0.03), 0 40px 100px rgba(0,0,0,0.65), inset 0 0.5px 0 rgba(255,255,255,0.05);
       }
     }
-
-    /* ── Status bar ── */
     .statusbar {
       flex: 0 0 54px;
       padding: 16px 28px 0;
@@ -102,8 +87,6 @@
       letter-spacing: 0.01em;
     }
     .pill.ok { color: var(--ok); background: rgba(48,209,88,0.10); }
-
-    /* ── Large title ── */
     .large-title {
       flex: 0 0 auto;
       padding: 2px 24px 16px;
@@ -126,8 +109,6 @@
       color: var(--text3);
       visibility: hidden;
     }
-
-    /* ── Content ── */
     main {
       flex: 1 1 0;
       overflow: hidden;
@@ -138,12 +119,10 @@
     .screen {
       position: absolute; inset: 0;
       overflow-y: auto;
-      padding: 4px 0 16px;
+      padding: 4px 0 90px;
       display: none;
     }
     .screen.active { display: block; }
-
-    /* ── Glass surfaces ── */
     .glass {
       background: var(--glass);
       backdrop-filter: blur(50px) saturate(200%);
@@ -151,7 +130,6 @@
       border: 0.5px solid var(--glass-border);
       position: relative;
     }
-    /* Highlight edge */
     .glass::after {
       content: "";
       position: absolute; inset: 0;
@@ -159,39 +137,13 @@
       pointer-events: none;
       box-shadow: inset 0 1px 0 var(--glass-highlight);
     }
-
-    /* ── Stats ── */
-    .stats-row {
-      display: flex;
-      gap: 10px;
-      padding: 0 16px 14px;
-    }
-    .stat-card {
-      flex: 1;
-      padding: 18px;
-      border-radius: var(--r-card);
-    }
-    .stat-card .n {
-      font-size: 34px;
-      font-weight: 700;
-      color: var(--accent);
-      line-height: 1;
-    }
-    .stat-card .l {
-      font-size: 13px;
-      color: var(--text3);
-      margin-top: 5px;
-    }
-
-    /* ── Filter chips ── */
-    .filters {
-      display: flex;
-      gap: 8px;
-      padding: 0 16px 14px;
-    }
+    .stats-row { display: flex; gap: 10px; padding: 0 16px 14px; }
+    .stat-card { flex: 1; padding: 18px; border-radius: var(--r-card); }
+    .stat-card .n { font-size: 34px; font-weight: 700; color: var(--accent); line-height: 1; }
+    .stat-card .l { font-size: 13px; color: var(--text3); margin-top: 5px; }
+    .filters { display: flex; gap: 8px; padding: 0 16px 14px; }
     .fchip {
-      flex: 1;
-      border: none;
+      flex: 1; border: none;
       background: rgba(255,255,255,0.05);
       color: var(--text2);
       border-radius: 20px;
@@ -203,21 +155,10 @@
       transition: all 0.2s ease;
       text-align: center;
     }
-    .fchip.on {
-      background: var(--accent);
-      color: #fff;
-      box-shadow: 0 2px 14px rgba(10,132,255,0.30);
-    }
-
-    /* ── Entry list ── */
-    .entry-group {
-      margin: 0 16px 16px;
-      border-radius: var(--r-card);
-      overflow: hidden;
-    }
+    .fchip.on { background: var(--accent); color: #fff; box-shadow: 0 2px 14px rgba(10,132,255,0.30); }
+    .entry-group { margin: 0 16px 16px; border-radius: var(--r-card); overflow: hidden; }
     .row-item {
-      display: flex;
-      align-items: center;
+      display: flex; align-items: center;
       padding: 14px 16px;
       border-bottom: 0.5px solid var(--sep);
       cursor: pointer;
@@ -227,25 +168,15 @@
     .row-item:active { background: rgba(255,255,255,0.02); }
     .row-item .body { flex: 1; min-width: 0; }
     .row-item .title { font-size: 17px; margin: 0 0 3px; }
-    .row-item .desc {
-      font-size: 14px; color: var(--text3); margin: 0;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
+    .row-item .desc { font-size: 14px; color: var(--text3); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .row-item .chevron { color: rgba(255,255,255,0.12); font-size: 18px; margin-left: 10px; }
     .row-item .meta { display: flex; gap: 6px; margin-top: 7px; }
-    .badge {
-      font-size: 11px; font-weight: 500;
-      padding: 2px 8px; border-radius: 8px;
-      background: rgba(255,255,255,0.05); color: var(--text2);
-    }
+    .badge { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text2); }
     .badge.ok { background: rgba(48,209,88,0.10); color: var(--ok); }
     .badge.warn { background: rgba(255,159,10,0.10); color: var(--warn); }
-
-    /* ── FAB (inline, beside title) ── */
     .fab {
       width: 38px; height: 38px;
-      border-radius: 19px;
-      border: none;
+      border-radius: 19px; border: none;
       background: rgba(255,255,255,0.06);
       backdrop-filter: blur(20px);
       color: var(--accent);
@@ -257,8 +188,6 @@
       box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.08);
     }
     .fab:active { transform: scale(0.88); background: rgba(255,255,255,0.10); }
-
-    /* ── Chat ── */
     .chat-wrap { display: flex; flex-direction: column; height: 100%; }
     .chat-log { flex: 1; overflow-y: auto; padding: 12px 16px 16px; }
     .bubble {
@@ -273,16 +202,8 @@
       word-break: break-word;
       animation: in 0.28s cubic-bezier(0.32,0.72,0,1);
     }
-    @keyframes in {
-      from { opacity: 0; transform: translateY(10px) scale(0.95); }
-      to { opacity: 1; transform: none; }
-    }
-    .bubble.user {
-      margin-left: auto;
-      background: var(--accent);
-      color: #fff;
-      border-bottom-right-radius: 6px;
-    }
+    @keyframes in { from { opacity: 0; transform: translateY(10px) scale(0.95); } to { opacity: 1; transform: none; } }
+    .bubble.user { margin-left: auto; background: var(--accent); color: #fff; border-bottom-right-radius: 6px; }
     .bubble.bot {
       background: var(--glass);
       backdrop-filter: blur(30px);
@@ -295,8 +216,7 @@
       display: flex; flex-direction: column; gap: 8px;
     }
     .ref {
-      font-size: 13px;
-      color: var(--accent);
+      font-size: 13px; color: var(--accent);
       background: var(--accent-soft);
       border-radius: 12px;
       padding: 10px 12px;
@@ -317,246 +237,109 @@
       cursor: pointer;
     }
     .guide-btn:active { background: rgba(10,132,255,0.25); }
-
-    /* ── Sheet ── */
-    .sheet-backdrop {
-      position: absolute; inset: 0;
-      background: rgba(0,0,0,0.35);
-      backdrop-filter: blur(8px);
-      display: none; z-index: 20;
+    .typing { display: inline-flex; gap: 5px; padding: 4px 0; }
+    .typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); animation: blink 1.2s infinite; }
+    .typing i:nth-child(2) { animation-delay: 0.2s; }
+    .typing i:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes blink { 0%,80%,100%{opacity:.25} 40%{opacity:1} }
+    #toast {
+      position: absolute; left: 50%; bottom: 110px;
+      transform: translateX(-50%) translateY(16px);
+      background: var(--glass); backdrop-filter: blur(40px);
+      color: var(--text); padding: 12px 28px;
+      border-radius: 22px; font-size: 14px; font-weight: 500;
+      opacity: 0; pointer-events: none;
+      transition: all 0.28s cubic-bezier(0.32,0.72,0,1);
+      z-index: 40; border: 0.5px solid var(--glass-border);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
     }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .empty { text-align: center; color: var(--text3); padding: 80px 24px; font-size: 15px; line-height: 1.7; }
+    .empty .big { font-size: 48px; margin-bottom: 16px; }
+    .sheet-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.35); backdrop-filter: blur(8px); display: none; z-index: 20; }
     .sheet-backdrop.open { display: block; }
     .sheet {
-      position: absolute;
-      left: 0; right: 0; bottom: 0;
+      position: absolute; left: 0; right: 0; bottom: 0;
       background: var(--glass);
       backdrop-filter: blur(80px) saturate(220%);
-      -webkit-backdrop-filter: blur(80px) saturate(220%);
       border-radius: 20px 20px 0 0;
       border-top: 0.5px solid rgba(255,255,255,0.10);
       padding: 0 0 calc(24px + env(safe-area-inset-bottom, 0px));
       z-index: 21;
       transform: translateY(100%);
       transition: transform 0.38s cubic-bezier(0.32,0.72,0,1);
-      max-height: 85%;
-      overflow-y: auto;
+      max-height: 85%; overflow-y: auto;
     }
     .sheet.open { transform: translateY(0); }
-    .sheet::before {
-      content: ""; position: absolute; inset: 0;
-      border-radius: inherit; pointer-events: none;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
-    }
-    .sheet-handle {
-      width: 38px; height: 5px;
-      background: rgba(255,255,255,0.12);
-      border-radius: 3px;
-      margin: 14px auto 18px;
-    }
-    .sheet-header {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 0 24px 18px;
-      border-bottom: 0.5px solid var(--sep);
-    }
-    .sheet-header .cancel, .sheet-header .save {
-      background: none; border: none;
-      color: var(--accent);
-      font-size: 16px;
-      cursor: pointer;
-      font-family: inherit;
-    }
+    .sheet::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; box-shadow: inset 0 1px 0 rgba(255,255,255,0.08); }
+    .sheet-handle { width: 38px; height: 5px; background: rgba(255,255,255,0.12); border-radius: 3px; margin: 14px auto 18px; }
+    .sheet-header { display: flex; justify-content: space-between; align-items: center; padding: 0 24px 18px; border-bottom: 0.5px solid var(--sep); }
+    .sheet-header .cancel, .sheet-header .save { background: none; border: none; color: var(--accent); font-size: 16px; cursor: pointer; font-family: inherit; }
     .sheet-header .save { font-weight: 600; }
     .sheet-header h3 { margin: 0; font-size: 17px; font-weight: 600; }
     .sheet-body { padding: 20px 24px; }
-    label.field {
-      display: block;
-      font-size: 12px; font-weight: 600;
-      color: var(--text3);
-      margin: 20px 0 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
+    label.field { display: block; font-size: 12px; font-weight: 600; color: var(--text3); margin: 20px 0 8px; text-transform: uppercase; letter-spacing: 0.06em; }
     label.field:first-child { margin-top: 0; }
     input.f, textarea.f, select.f {
       width: 100%;
       background: rgba(255,255,255,0.05);
       border: 0.5px solid rgba(255,255,255,0.08);
-      border-radius: 14px;
-      color: var(--text);
-      padding: 14px;
-      font-size: 16px;
-      font-family: inherit;
-      outline: none;
+      border-radius: 14px; color: var(--text);
+      padding: 14px; font-size: 16px; font-family: inherit; outline: none;
     }
-    input.f:focus, textarea.f:focus {
-      background: rgba(10,132,255,0.06);
-      border-color: rgba(10,132,255,0.25);
-    }
+    input.f:focus, textarea.f:focus { background: rgba(10,132,255,0.06); border-color: rgba(10,132,255,0.25); }
     textarea.f { min-height: 120px; resize: vertical; line-height: 1.5; }
-
-    /* ── Typing ── */
-    .typing { display: inline-flex; gap: 5px; padding: 4px 0; }
-    .typing i {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: var(--text3);
-      animation: blink 1.2s infinite;
-    }
-    .typing i:nth-child(2) { animation-delay: 0.2s; }
-    .typing i:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes blink { 0%,80%,100%{opacity:.25} 40%{opacity:1} }
-
-    /* ── Toast ── */
-    #toast {
-      position: absolute;
-      left: 50%; bottom: 110px;
-      transform: translateX(-50%) translateY(16px);
-      background: var(--glass);
-      backdrop-filter: blur(40px);
-      color: var(--text);
-      padding: 12px 28px;
-      border-radius: 22px;
-      font-size: 14px; font-weight: 500;
-      opacity: 0; pointer-events: none;
-      transition: all 0.28s cubic-bezier(0.32,0.72,0,1);
-      z-index: 40;
-      border: 0.5px solid var(--glass-border);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-    }
-    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-    .empty {
-      text-align: center;
-      color: var(--text3);
-      padding: 80px 24px;
-      font-size: 15px; line-height: 1.7;
-    }
-    .empty .big { font-size: 48px; margin-bottom: 16px; }
-
-    /* ══════════════════════════════════════
-       LIQUID GLASS TAB BAR
-       ══════════════════════════════════════ */
     .tabbar-wrap {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      z-index: 10;
-      display: flex;
-      align-items: center;
-      padding: 0 16px 18px;
-      gap: 8px;
+      position: absolute; bottom: 0; left: 0; right: 0;
+      z-index: 10; display: flex; align-items: center;
+      padding: 0 16px 18px; gap: 8px;
       pointer-events: none;
     }
     .tabbar {
-      display: flex;
-      gap: 4px;
+      display: flex; gap: 4px;
       background: rgba(28,28,30,0.55);
       backdrop-filter: blur(60px) saturate(220%);
-      -webkit-backdrop-filter: blur(60px) saturate(220%);
       border-radius: var(--r-pill);
-      padding: 0 10px;
-      height: 44px;
+      padding: 0 10px; height: 44px;
       border: 0.5px solid rgba(255,255,255,0.10);
-      box-shadow:
-        0 8px 32px rgba(0,0,0,0.35),
-        0 2px 8px rgba(0,0,0,0.20),
-        inset 0 1px 0 rgba(255,255,255,0.07);
-      pointer-events: auto;
-      position: relative;
-      flex-shrink: 0;
-      align-items: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.07);
+      pointer-events: auto; position: relative; flex-shrink: 0; align-items: center;
     }
-    .tabbar::before {
-      content: "";
-      position: absolute;
-      top: 0; left: 12px; right: 12px;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
-      border-radius: 1px;
-    }
+    .tabbar::before { content: ""; position: absolute; top: 0; left: 12px; right: 12px; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent); }
     .tabbar .tab {
-      border: none;
-      background: transparent;
-      color: var(--text3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0 14px;
-      height: 32px;
-      cursor: pointer;
-      font-family: inherit;
-      border-radius: 16px;
-      transition: all 0.25s ease;
+      border: none; background: transparent; color: var(--text3);
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 14px; height: 32px;
+      cursor: pointer; font-family: inherit;
+      border-radius: 16px; transition: all 0.25s ease;
     }
     .tabbar .tab svg { width: 18px; height: 18px; }
-    .tabbar .tab.active {
-      color: var(--accent);
-      background: rgba(10,132,255,0.10);
-    }
-
-    /* ── Chat input islands ── */
-    .chat-islands {
-      flex: 1;
-      display: flex;
-      gap: 8px;
-      pointer-events: auto;
-    }
+    .tabbar .tab.active { color: var(--accent); background: rgba(10,132,255,0.10); }
+    .chat-islands { flex: 1; display: flex; gap: 8px; pointer-events: auto; }
     .chat-islands.hidden { display: none; }
     .input-island {
-      flex: 1;
-      height: 44px;
+      flex: 1; height: 44px;
       background: rgba(28,28,30,0.55);
       backdrop-filter: blur(60px) saturate(220%);
-      -webkit-backdrop-filter: blur(60px) saturate(220%);
       border-radius: var(--r-pill);
       border: 0.5px solid rgba(255,255,255,0.10);
-      box-shadow:
-        0 8px 32px rgba(0,0,0,0.35),
-        0 2px 8px rgba(0,0,0,0.20),
-        inset 0 1px 0 rgba(255,255,255,0.07);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.07);
       position: relative;
     }
-    .input-island::before {
-      content: "";
-      position: absolute;
-      top: 0; left: 12px; right: 12px;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
-    }
-    .input-island input {
-      width: 100%;
-      height: 100%;
-      background: transparent;
-      border: none;
-      color: var(--text);
-      padding: 0 16px;
-      font-size: 14px;
-      font-family: inherit;
-      outline: none;
-      border-radius: var(--r-pill);
-    }
+    .input-island::before { content: ""; position: absolute; top: 0; left: 12px; right: 12px; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent); }
+    .input-island input { width: 100%; height: 100%; background: transparent; border: none; color: var(--text); padding: 0 16px; font-size: 14px; font-family: inherit; outline: none; border-radius: var(--r-pill); }
     .input-island input::placeholder { color: var(--text3); }
     .send-island {
-      width: 44px; height: 44px;
-      border-radius: 22px;
-      border: none;
+      width: 44px; height: 44px; border-radius: 22px; border: none;
       background: rgba(28,28,30,0.55);
       backdrop-filter: blur(60px) saturate(220%);
-      -webkit-backdrop-filter: blur(60px) saturate(220%);
-      color: var(--accent);
-      font-size: 18px;
-      cursor: pointer;
-      box-shadow:
-        0 8px 32px rgba(0,0,0,0.35),
-        0 2px 8px rgba(0,0,0,0.20),
-        inset 0 1px 0 rgba(255,255,255,0.07);
+      color: var(--accent); font-size: 18px; cursor: pointer;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.07);
       border: 0.5px solid rgba(255,255,255,0.10);
-      flex-shrink: 0;
-      transition: all 0.15s;
+      flex-shrink: 0; transition: all 0.15s;
       display: grid; place-items: center;
     }
     .send-island:active { transform: scale(0.9); background: rgba(10,132,255,0.15); }
-
-    /* Leave room for floating island bar */
-    .screen { padding-bottom: 90px; }
   </style>
 </head>
 <body>
@@ -568,20 +351,18 @@
         <span>100%</span>
       </div>
     </div>
-
     <div class="large-title">
       <div class="text">
         <h1 id="pageTitle">资料</h1>
-        <p class="sub" id="pageSub">本地知识库</p>
+        <p class="sub" id="pageSub"></p>
       </div>
       <button class="fab" id="fabAdd">+</button>
     </div>
-
     <main>
       <section class="screen active" id="screen-entries">
         <div class="stats-row">
-          <div class="stat-card glass"><div class="n" id="statCount">4</div><div class="l">资料</div></div>
-          <div class="stat-card glass"><div class="n" id="statReady">3</div><div class="l">已向量</div></div>
+          <div class="stat-card glass"><div class="n" id="statCount">5</div><div class="l">资料</div></div>
+          <div class="stat-card glass"><div class="n" id="statReady">5</div><div class="l">已向量</div></div>
         </div>
         <div class="filters" id="filters">
           <button class="fchip on" data-cat="info">信息</button>
@@ -591,15 +372,12 @@
         </div>
         <div id="entryList"></div>
       </section>
-
       <section class="screen" id="screen-chat">
         <div class="chat-wrap">
           <div class="chat-log" id="chatLog"></div>
         </div>
       </section>
     </main>
-
-    <!-- Bottom island bar -->
     <div class="tabbar-wrap">
       <div class="tabbar">
         <button class="tab active" data-screen="entries">
@@ -618,7 +396,6 @@
         </button>
       </div>
     </div>
-
     <div class="sheet-backdrop" id="sheetBd"></div>
     <div class="sheet" id="sheet">
       <div class="sheet-handle"></div>
@@ -641,18 +418,10 @@
         <textarea class="f" id="fBody" placeholder="写下你想记住的…" maxlength="20000"></textarea>
       </div>
     </div>
-
     <div id="toast"></div>
   </div>
-
   <script>
-    const CAT = {
-      info: { name: "信息", cls: "info" },
-      like: { name: "喜好", cls: "like" },
-      plan: { name: "日程", cls: "plan" },
-      other: { name: "其它", cls: "other" }
-    };
-
+    const CAT = { info: { name: "信息" }, like: { name: "喜好" }, plan: { name: "日程" }, other: { name: "其它" } };
     const seed = [
       { id: 1, title: "基本信息", cat: "info", body: "身高 175cm，体重 68kg，血型 O。目标是保持体脂稳定，优先规律作息。", status: "ready", updated: "今天" },
       { id: 2, title: "饮食喜好", cat: "like", body: "不吃香菜。偏好清淡中餐，早餐常喝燕麦牛奶。对花生过敏。", status: "ready", updated: "昨天" },
@@ -660,238 +429,89 @@
       { id: 4, title: "生理期记录-8月", cat: "info", body: "8月3日开始，周期约 28 天，经期 5 天左右。", status: "ready", updated: "8月" },
       { id: 5, title: "生理期记录-9月", cat: "info", body: "9月4日开始，周期约 28 天，经期 5 天左右。", status: "ready", updated: "9月" }
     ];
-
     let entries = [...seed];
     let filter = "info";
     let editingId = null;
     const $ = s => document.querySelector(s);
     const $$ = s => [...document.querySelectorAll(s)];
-
-    function toast(msg) {
-      const t = $("#toast");
-      t.textContent = msg;
-      t.classList.add("show");
-      clearTimeout(toast._t);
-      toast._t = setTimeout(() => t.classList.remove("show"), 1800);
-    }
-
-    function clock() {
-      const d = new Date();
-      $("#clock").textContent =
-        String(d.getHours()).padStart(2, "0") + ":" +
-        String(d.getMinutes()).padStart(2, "0");
-    }
+    function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 1800); }
+    function clock() { const d = new Date(); $("#clock").textContent = String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0"); }
     clock(); setInterval(clock, 30000);
-
     function renderEntries() {
       const list = entries.filter(e => e.cat === filter);
       $("#statCount").textContent = entries.length;
       $("#statReady").textContent = entries.filter(e => e.status === "ready").length;
       const box = $("#entryList");
-      if (!list.length) {
-        box.innerHTML = '<div class="empty"><div class="big" style="opacity:.15;font-size:64px">∅</div>还没有资料<br/>点标题右侧 + 开始录入</div>';
-        return;
-      }
+      if (!list.length) { box.innerHTML = '<div class="empty"><div class="big" style="opacity:.15;font-size:64px">∅</div>还没有资料<br/>点标题右侧 + 开始录入</div>'; return; }
       box.innerHTML = '<div class="entry-group glass">' + list.map(e => {
-        const c = CAT[e.cat] || CAT.other;
-        const st = e.status === "ready"
-          ? '<span class="badge ok">已向量</span>'
-          : e.status === "pending"
-            ? '<span class="badge warn">向量中</span>'
-            : '<span class="badge">失败</span>';
-        return `
-          <div class="row-item" data-edit="${e.id}">
-            <div class="body">
-              <p class="title">${esc(e.title)}</p>
-              <p class="desc">${esc(e.body)}</p>
-              <div class="meta">
-                ${st}
-                <span class="badge">${esc(e.updated)}</span>
-              </div>
-            </div>
-            <span class="chevron">›</span>
-          </div>`;
+        const st = e.status === "ready" ? '<span class="badge ok">已向量</span>' : e.status === "pending" ? '<span class="badge warn">向量中</span>' : '<span class="badge">失败</span>';
+        return `<div class="row-item" data-edit="${e.id}"><div class="body"><p class="title">${esc(e.title)}</p><p class="desc">${esc(e.body)}</p><div class="meta">${st}<span class="badge">${esc(e.updated)}</span></div></div><span class="chevron">›</span></div>`;
       }).join("") + '</div>';
-      box.querySelectorAll("[data-edit]").forEach(el => {
-        el.addEventListener("click", () => openSheet(Number(el.dataset.edit)));
-      });
+      box.querySelectorAll("[data-edit]").forEach(el => { el.addEventListener("click", () => openSheet(Number(el.dataset.edit))); });
     }
-
-    function esc(s) {
-      return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
-    }
-
+    function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
     function openSheet(id) {
       editingId = id || null;
-      if (id) {
-        const e = entries.find(x => x.id === id);
-        if (!e) return;
-        $("#sheetTitle").textContent = "编辑";
-        $("#fTitle").value = e.title;
-        $("#fCat").value = e.cat;
-        $("#fBody").value = e.body;
-      } else {
-        $("#sheetTitle").textContent = "新建资料";
-        $("#fTitle").value = "";
-        $("#fCat").value = "info";
-        $("#fBody").value = "";
-      }
-      $("#sheetBd").classList.add("open");
-      requestAnimationFrame(() => $("#sheet").classList.add("open"));
+      if (id) { const e = entries.find(x => x.id === id); if (!e) return; $("#sheetTitle").textContent = "编辑"; $("#fTitle").value = e.title; $("#fCat").value = e.cat; $("#fBody").value = e.body; }
+      else { $("#sheetTitle").textContent = "新建资料"; $("#fTitle").value = ""; $("#fCat").value = "info"; $("#fBody").value = ""; }
+      $("#sheetBd").classList.add("open"); requestAnimationFrame(() => $("#sheet").classList.add("open"));
     }
-
-    function closeSheet() {
-      $("#sheet").classList.remove("open");
-      setTimeout(() => $("#sheetBd").classList.remove("open"), 380);
-      editingId = null;
-    }
-
+    function closeSheet() { $("#sheet").classList.remove("open"); setTimeout(() => $("#sheetBd").classList.remove("open"), 380); editingId = null; }
     $("#fabAdd").addEventListener("click", () => openSheet(null));
     $("#sheetCancel").addEventListener("click", closeSheet);
     $("#sheetBd").addEventListener("click", closeSheet);
-
     $("#sheetSave").addEventListener("click", () => {
       const title = $("#fTitle").value.trim() || "未命名";
       const cat = $("#fCat").value;
       const body = $("#fBody").value.trim();
       if (!body) { toast("内容不能为空"); return; }
       const now = "刚刚";
-      if (editingId) {
-        const e = entries.find(x => x.id === editingId);
-        Object.assign(e, { title, cat, body, status: "pending", updated: now });
-        toast("已更新");
-      } else {
-        entries.unshift({ id: Date.now(), title, cat, body, status: "pending", updated: now });
-        toast("已保存");
-      }
-      closeSheet();
-      renderEntries();
-      setTimeout(() => {
-        entries.forEach(e => { if (e.status === "pending") e.status = "ready"; });
-        renderEntries();
-      }, 1200);
+      if (editingId) { const e = entries.find(x => x.id === editingId); Object.assign(e, { title, cat, body, status: "pending", updated: now }); toast("已更新"); }
+      else { entries.unshift({ id: Date.now(), title, cat, body, status: "pending", updated: now }); toast("已保存"); }
+      closeSheet(); renderEntries();
+      setTimeout(() => { entries.forEach(e => { if (e.status === "pending") e.status = "ready"; }); renderEntries(); }, 1200);
     });
-
-    $("#filters").addEventListener("click", ev => {
-      const b = ev.target.closest(".fchip");
-      if (!b) return;
-      filter = b.dataset.cat;
-      $$(".fchip").forEach(x => x.classList.toggle("on", x === b));
-      renderEntries();
-    });
-
-    // Tabs
-    const meta = {
-      entries: { t: "资料", s: "" },
-      chat: { t: "问答", s: "" }
-    };
+    $("#filters").addEventListener("click", ev => { const b = ev.target.closest(".fchip"); if (!b) return; filter = b.dataset.cat; $$(".fchip").forEach(x => x.classList.toggle("on", x === b)); renderEntries(); });
+    const meta = { entries: { t: "资料" }, chat: { t: "问答" } };
     $$(".tab").forEach(tab => {
       tab.addEventListener("click", () => {
         const id = tab.dataset.screen;
         $$(".tab").forEach(t => t.classList.toggle("active", t === tab));
         $$(".screen").forEach(s => s.classList.toggle("active", s.id === "screen-" + id));
         $("#pageTitle").textContent = meta[id].t;
-        $("#pageSub").textContent = meta[id].s;
         $("#fabAdd").style.display = id === "entries" ? "block" : "none";
-        // Show/hide chat input islands
         $("#chatIslands").classList.toggle("hidden", id !== "chat");
       });
     });
 
-    // Chat
+    // ═══════════════════════════════════════════════════════════════
+    //  RAG 问答核心（真实架构，打包后接 Qwen）
+    // ═══════════════════════════════════════════════════════════════
+
+    const greetings = { "你好":"你好呀！有什么想问我的？","嗨":"嗨！我在~","在吗":"在的~","谢谢":"不客气！","谢了":"不客气！","嗯":"嗯嗯~","好的":"好的~","ok":"好的~","嗯嗯":"嗯嗯~" };
+
+    // 同义词扩展检索
     const synonyms = {
-      // 时间相关
-      "这周": ["周", "日程", "安排", "计划", "本周", "牙医", "评审"],
-      "周一": ["周一", "周"],
-      "周二": ["周二", "周"],
-      "周三": ["周三", "周", "牙医"],
-      "周四": ["周四", "周"],
-      "周五": ["周五", "周", "产品", "评审"],
-      "周六": ["周六", "周"],
-      "周日": ["周日", "周", "整理"],
-      "今天": ["日", "日程", "安排", "今天"],
-      "明天": ["日", "日程", "安排", "明天"],
-      "本周": ["周", "日程", "安排", "牙医", "评审"],
-      "明天": ["日", "日程"],
-      "提醒": ["日程", "安排", "计划", "别忘"],
-      "注意": ["日程", "安排", "计划"],
-      "日程": ["安排", "计划", "日程", "牙医", "评审"],
-      "安排": ["日程", "计划", "安排", "牙医", "评审", "整理"],
-      "计划": ["日程", "安排", "计划"],
-      "待办": ["日程", "安排", "计划"],
-      "约会": ["日程", "安排"],
-      "几号": ["日程", "安排", "周"],
-
-      // 饮食相关
-      "吃": ["饮食", "喜好", "餐", "食", "香菜", "花生", "过敏", "清淡", "燕麦"],
-      "喝": ["饮食", "喜好", "燕麦", "牛奶"],
-      "食物": ["饮食", "喜好", "香菜", "花生"],
-      "餐": ["饮食", "喜好", "早餐", "中餐"],
-      "早餐": ["饮食", "喜好", "燕麦", "牛奶"],
-      "午餐": ["饮食", "喜好", "中餐"],
-      "晚餐": ["饮食", "喜好", "清淡"],
-      "口味": ["饮食", "喜好", "清淡", "香菜"],
-      "过敏": ["饮食", "花生", "过敏"],
-      "忌口": ["饮食", "香菜", "花生", "过敏"],
-      "偏好": ["喜好", "偏好", "喜欢"],
-
-      // 身体信息
-      "身高": ["基本信息", "身高", "175"],
-      "体重": ["基本信息", "体重", "68"],
-      "身体": ["基本信息", "身高", "体重", "血型"],
-      "血型": ["基本信息", "血型"],
-      "体质": ["基本信息", "身高", "体重"],
-      "体脂": ["基本信息", "体脂"],
-      "健康": ["基本信息", "过敏", "血型"],
-
-      // 姨妈相关
-      "姨妈": ["生理", "经期", "周期"],
-      "生理期": ["生理", "经期", "周期", "姨妈"],
-      "经期": ["生理", "经期", "周期"],
-      "月经": ["生理", "经期", "周期"],
-
-      // 作息相关
-      "作息": ["作息", "睡觉", "起床", "午休"],
-      "睡觉": ["作息", "睡", "起床"],
-      "起床": ["作息", "起床"],
-      "午休": ["作息", "午休"],
-      "几点睡": ["作息", "睡", "23"],
-      "几点起": ["作息", "起床", "7"],
-
-      // 习惯/喜好
-      "喜欢": ["喜好", "偏好", "喜欢"],
-      "不喜欢": ["喜好", "不喜欢", "香菜"],
-      "爱好": ["喜好", "偏好", "习惯"],
-      "习惯": ["喜好", "习惯", "作息"],
-      "颜色": ["喜好", "颜色"],
-      "运动": ["喜好", "运动"],
-      "兴趣": ["喜好", "兴趣"],
-
-      // 通用
-      "资料": ["信息", "喜好", "日程"],
-      "信息": ["信息", "基本信息"],
-      "所有": ["信息", "喜好", "日程"],
-      "全部": ["信息", "喜好", "日程"],
-      "整理": ["信息", "喜好", "日程", "汇总"],
-      "总结": ["信息", "喜好", "日程", "汇总"],
+      "这周":["周","日程","安排","计划","本周"],"周一":["周一"],"周二":["周二"],"周三":["周三","牙医"],"周四":["周四"],"周五":["周五","产品","评审"],"周六":["周六"],"周日":["周日","整理"],
+      "今天":["日程","安排"],"明天":["日程","安排"],"本周":["周","日程","牙医"],
+      "提醒":["日程","安排","计划"],"注意":["日程","安排"],"日程":["安排","计划","牙医","评审"],"安排":["日程","计划","牙医","评审","整理"],"计划":["日程","安排"],"待办":["日程","安排"],
+      "吃":["饮食","喜好","香菜","花生","过敏","清淡","燕麦"],"喝":["饮食","喜好","燕麦","牛奶"],"食物":["饮食","香菜","花生"],"餐":["饮食","早餐","中餐"],"早餐":["饮食","燕麦","牛奶"],"口味":["饮食","清淡","香菜"],"过敏":["饮食","花生","过敏"],"忌口":["饮食","香菜","花生"],"偏好":["喜好","偏好","喜欢"],
+      "身高":["基本信息","身高","175"],"体重":["基本信息","体重","68"],"身体":["基本信息","身高","体重","血型"],"血型":["基本信息","血型"],"健康":["基本信息","过敏","血型"],
+      "姨妈":["生理","经期","周期"],"生理期":["生理","经期","周期","姨妈"],"经期":["生理","经期","周期"],"月经":["生理","经期"],
+      "作息":["作息","睡觉","起床","午休"],"睡觉":["作息","睡","起床"],"起床":["作息","起床"],"几点睡":["作息","睡","23"],"几点起":["作息","起床","7"],
+      "喜欢":["喜好","偏好"],"不喜欢":["喜好","不喜欢","香菜"],"爱好":["喜好","偏好"],"习惯":["喜好","习惯","作息"],"运动":["喜好","运动"],"兴趣":["喜好","兴趣"],
+      "资料":["信息","喜好","日程"],"信息":["信息","基本信息"],"所有":["信息","喜好","日程"],"整理":["信息","喜好","日程"],"总结":["信息","喜好","日程"]
     };
 
     function scoreSim(q, e) {
       const t = (e.title + e.body + (CAT[e.cat]?.name || "")).toLowerCase();
       const chars = [...new Set(q.replace(/\s/g, ""))];
-      let h = 0;
-      chars.forEach(ch => { if (t.includes(ch)) h++; });
+      let h = 0; chars.forEach(ch => { if (t.includes(ch)) h++; });
       let score = chars.length ? h / chars.length : 0;
-
-      // 同义词加分
-      Object.entries(synonyms).forEach(([key, words]) => {
-        if (q.includes(key)) {
-          words.forEach(w => { if (t.includes(w)) score += 0.15; });
-        }
-      });
-
+      Object.entries(synonyms).forEach(([key, words]) => { if (q.includes(key)) words.forEach(w => { if (t.includes(w)) score += 0.15; }); });
       return Math.min(score, 1);
     }
+
     function retrieve(q) {
       return entries.filter(e => e.status === "ready")
         .map(e => ({ e, score: scoreSim(q, e) }))
@@ -899,51 +519,62 @@
         .sort((a, b) => b.score - a.score)
         .slice(0, 2);
     }
-    function mockAnswer(q, hits) {
-      if (!hits.length) return "暂无相关个人资料";
-      if (q.includes("身高") || q.includes("体重"))
-        return "根据你的档案：身高 175cm，体重 68kg。目标是保持体脂稳定、优先规律作息。";
-      if (q.includes("吃") || q.includes("饮食") || q.includes("花生") || q.includes("香菜"))
-        return "你偏好清淡中餐，早餐常燕麦牛奶；不吃香菜，对花生过敏，点餐时注意避开含花生食品。";
-      if (q.includes("周") || q.includes("安排") || q.includes("日程"))
-        return "本周安排：周三 19:30 牙医复诊；周五下午产品评审；周日想整理房间。";
-      if (q.includes("姨妈") || q.includes("生理") || q.includes("经期"))
-        return "根据你的记录：最近一次大约从本月 3 日开始，周期约 28 天，经期约 5 天。第 1–2 天容易乏力，建议少排重活。";
-      return `根据「${hits[0].e.title}」：${hits[0].e.body.slice(0, 80)}${hits[0].e.body.length > 80 ? "…" : ""}`;
-    }
-    function addBubble(role, html) {
-      const log = $("#chatLog");
-      const d = document.createElement("div");
-      d.className = "bubble " + role;
-      d.innerHTML = html;
-      log.appendChild(d);
-      log.scrollTop = log.scrollHeight;
-      return d;
-    }
-    // 问候白名单
-    const greetings = {
-      "你好": "你好呀！有什么想问我的？",
-      "嗨": "嗨！我在，想聊什么？",
-      "在吗": "在的，随时可以问我~",
-      "谢谢": "不客气！",
-      "谢了": "不客气！",
-      "嗯": "嗯嗯~",
-      "好的": "好的~",
-      "ok": "好的~",
-      "嗯嗯": "嗯嗯~",
-    };
 
-    // 意图检测
-    function detectIntent(q) {
-      if (/摘要|整理|汇总|总结|归纳/.test(q)) return "summary";
-      if (/提醒|注意|别忘|本周|这周|明天|今天|日程|安排|周[一二三四五六日]/.test(q)) return "remind";
-      if (/吃|喝|餐|食|晚餐|午餐|早餐|推荐|喜欢|口味/.test(q)) return "suggest";
-      if (/对比|变化|比较|差/.test(q)) return "compare";
-      if (/缺|还差|还少|补充|还需要/.test(q)) return "missing";
-      return "qa";
+    // 构建 RAG Prompt（真实 Prompt，打包后给 Qwen）
+    function buildRagPrompt(q, hits) {
+      const data = hits.map(h => `【${h.e.title}】\n${h.e.body}`).join("\n\n");
+      return `你是用户的专属离线私人助手贝贝。根据下方【个人知识库】回答用户问题。
+
+规则：
+1. 只使用知识库里的信息回答，禁止编造
+2. 回答要简洁，只提取相关内容，不要重复所有资料
+3. 如果问"这个月/上个月"，根据当前日期判断并筛选对应记录
+4. 语气温柔关心，像朋友一样
+5. 如果知识库没有相关信息，友好提示"我还不知道这个，要告诉我吗？"
+
+当前日期：${new Date().toLocaleDateString('zh-CN')}
+
+【个人知识库】
+${data}
+
+用户问题：${q}`;
     }
 
-    // 没命中时引导录入
+    // Mock LLM（真实App替换为 Qwen API 调用）
+    function mockLlmResponse(q, hits) {
+      const now = new Date();
+      const currentMonth = now.getMonth() + 1;
+      const lastMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+
+      // 时间过滤
+      if (/这个月|本月/.test(q)) {
+        const filtered = hits.filter(h => h.e.body.includes(currentMonth + "月") || h.e.body.includes(currentMonth + "日"));
+        if (filtered.length) return filtered.map(h => h.e.body).join("\n");
+      }
+      if (/上个月/.test(q)) {
+        const filtered = hits.filter(h => h.e.body.includes(lastMonth + "月") || h.e.body.includes(lastMonth + "日"));
+        if (filtered.length) return filtered.map(h => h.e.body).join("\n");
+      }
+
+      // 日程提醒
+      if (/提醒|注意|别忘|安排|日程/.test(q)) {
+        const schedule = hits.filter(h => h.e.cat === "plan");
+        if (schedule.length) return schedule.map(h => h.e.body).join("\n");
+      }
+
+      // 饮食推荐
+      if (/吃|喝|餐|食|推荐|口味/.test(q)) {
+        const likes = hits.filter(h => h.e.cat === "like");
+        if (likes.length) return likes.map(h => h.e.body).join("\n") + "\n\n今晚可以考虑清淡的中餐~";
+      }
+
+      // 摘要/整理
+      if (/摘要|整理|汇总|总结/.test(q)) return hits.map(h => `${h.e.title}：${h.e.body}`).join("\n");
+
+      // 默认：返回全部匹配资料
+      return hits.map(h => h.e.body).join("\n");
+    }
+
     function guidePrompt(q) {
       const cats = [
         { key: "info", hint: "身高体重、血型、过敏史等基本信息" },
@@ -951,135 +582,11 @@
         { key: "plan", hint: "日程安排、待办事项、约会等" },
       ];
       const matched = cats.find(c => q.includes(c.hint.slice(0, 4))) || cats[0];
+      const names = { info: "信息", like: "喜好", plan: "日程" };
       return {
-        text: `我还不知道这个呢，要告诉我吗？\n\n你可以添加到「${matched.key === "info" ? "信息" : matched.key === "like" ? "喜好" : "日程"}」分类里~`,
-        cat: matched.key,
-        title: q.slice(0, 20),
+        text: `我还不知道这个呢，要告诉我吗？\n\n你可以添加到「${names[matched.key]}」分类里~`,
+        cat: matched.key, title: q.slice(0, 20),
       };
-    }
-
-    // 从资料body中提取匹配片段
-    function extractRelevant(q, body) {
-      const parts = body.split(/[；;。\n]/).filter(s => s.trim());
-      if (parts.length <= 1) return body;
-
-      // 时间理解：这个月/上个月/下个月
-      const now = new Date();
-      const monthMap = {
-        "这个月": now.getMonth() + 1,
-        "本月": now.getMonth() + 1,
-        "上个月": now.getMonth() === 0 ? 12 : now.getMonth(),
-        "下个月": now.getMonth() === 11 ? 1 : now.getMonth() + 2,
-      };
-      const monthKeywords = [];
-      Object.entries(monthMap).forEach(([key, month]) => {
-        if (q.includes(key)) {
-          monthKeywords.push(`${month}月`);
-          monthKeywords.push(`${month}日`);
-        }
-      });
-
-      // 提取有意义的关键词（2字以上）
-      const stopWords = "的了吗呢吧啊哦呀这那什么有为是否将就把被让给对从在";
-      const keywords = [...monthKeywords];
-      Object.keys(synonyms).forEach(k => {
-        if (q.includes(k) && k.length >= 2) keywords.push(k);
-      });
-      for (let i = 0; i < q.length - 1; i++) {
-        const word = q.slice(i, i + 2);
-        if (!stopWords.includes(word[0]) && !stopWords.includes(word[1])) {
-          keywords.push(word);
-        }
-      }
-
-      const matched = parts.filter(p => {
-        const lower = p.toLowerCase();
-        return keywords.some(k => lower.includes(k));
-      });
-
-      return matched.length ? matched.join("；") : body;
-    }
-
-    // 交互式回答
-    function interactiveAnswer(q, hits, intent) {
-      if (!hits.length) {
-        const guide = guidePrompt(q);
-        return { text: guide.text, guide: guide };
-      }
-      switch (intent) {
-        case "summary": {
-          const all = hits.map(h => h.e.body).join("\n");
-          return { text: `根据你的资料，帮你整理一下：\n\n${all}`, guide: null };
-        }
-        case "remind": {
-          const schedule = hits.filter(h => h.e.cat === "plan");
-          const items = schedule.length ? schedule : hits;
-
-          // 时间过滤：这个月/上个月
-          const now = new Date();
-          const monthMap = {
-            "这个月": now.getMonth() + 1,
-            "本月": now.getMonth() + 1,
-            "上个月": now.getMonth() === 0 ? 12 : now.getMonth(),
-            "下个月": now.getMonth() === 11 ? 1 : now.getMonth() + 2,
-          };
-          let targetMonth = null;
-          Object.entries(monthMap).forEach(([key, month]) => {
-            if (q.includes(key)) targetMonth = month;
-          });
-
-          let filtered = items;
-          if (targetMonth) {
-            filtered = items.filter(h => {
-              const body = h.e.body;
-              return body.includes(`${targetMonth}月`) || body.includes(`${targetMonth}日`);
-            });
-            // 如果没找到，用extractRelevant兜底
-            if (!filtered.length) {
-              filtered = items.map(h => ({
-                ...h,
-                e: { ...h.e, body: extractRelevant(q, h.e.body) }
-              })).filter(h => h.e.body !== items[0]?.e.body);
-            }
-          }
-
-          if (filtered.length) {
-            const lines = filtered.map(h => extractRelevant(q, h.e.body));
-            return { text: lines.join("\n"), guide: null };
-          }
-          return { text: `暂时没有安排，要添加日程吗？`, guide: { cat: "plan", title: "新日程", text: "" } };
-        }
-        case "suggest": {
-          const likes = hits.filter(h => h.e.cat === "like");
-          if (likes.length) {
-            return { text: `根据你的喜好：\n${likes.map(h => h.e.body).join("\n")}\n\n今晚可以考虑清淡的中餐~`, guide: null };
-          }
-          return { text: `我还不太了解你的口味，要告诉我吗？`, guide: { cat: "like", title: "饮食喜好", text: "" } };
-        }
-        case "compare": {
-          if (hits.length >= 2) {
-            return { text: `对比一下：\n\n📌 ${hits[0].e.title}：${hits[0].e.body}\n📌 ${hits[1].e.title}：${hits[1].e.body}`, guide: null };
-          }
-          return { text: `需要更多资料才能对比，要补充吗？`, guide: { cat: hits[0]?.e.cat || "info", title: q.slice(0, 20), text: "" } };
-        }
-        case "missing": {
-          const known = new Set(entries.map(e => e.cat));
-          const all = ["info", "like", "plan"];
-          const missing = all.filter(c => !known.has(c));
-          if (missing.length) {
-            const names = { info: "基本信息", like: "喜好", plan: "日程" };
-            return { text: `你还缺这些分类的资料：\n${missing.map(c => `• ${names[c]}`).join("\n")}\n\n要补充吗？`, guide: { cat: missing[0], title: names[missing[0]], text: "" } };
-          }
-          return { text: `资料挺全的！如果有新信息随时告诉我~`, guide: null };
-        }
-        default: {
-          const relevantParts = hits.map(h => {
-            const relevant = extractRelevant(q, h.e.body);
-            return `${relevant}`;
-          });
-          return { text: relevantParts.join("\n"), guide: null };
-        }
-      }
     }
 
     function ask(q) {
@@ -1088,57 +595,36 @@
       addBubble("user", esc(q));
       const typing = addBubble("bot", '<span class="typing"><i></i><i></i><i></i></span>');
       $("#chatSend").disabled = true;
-
       setTimeout(() => {
-        let answer, refs = "", guideHtml = "";
+        let answer = "", guideHtml = "";
         const lowerQ = q.toLowerCase();
-
         if (greetings[lowerQ]) {
           answer = greetings[lowerQ];
         } else {
           const hits = retrieve(q);
-          const intent = detectIntent(q);
-          const result = interactiveAnswer(q, hits, intent);
-          answer = result.text;
-
-          if (hits.length && intent === "qa") {
-            refs = `<div class="refs">${hits.map(h =>
-              `<div class="ref" data-ref="${h.e.id}">📎 ${esc(h.e.title)} · ${(h.score * 100).toFixed(0)}%</div>`
-            ).join("")}</div>`;
-          }
-
-          // 引导录入按钮
-          if (result.guide) {
-            guideHtml = `<button class="guide-btn" data-cat="${result.guide.cat}" data-title="${esc(result.guide.title)}">＋ 添加资料</button>`;
+          if (hits.length) {
+            // 构建 Prompt（真实App会发给 Qwen）
+            const prompt = buildRagPrompt(q, hits);
+            console.log("RAG Prompt:", prompt);
+            // Mock LLM 回答（真实App替换为: const answer = await llm.generate(prompt)）
+            answer = mockLlmResponse(q, hits);
+          } else {
+            const guide = guidePrompt(q);
+            answer = guide.text;
+            guideHtml = `<button class="guide-btn" data-cat="${guide.cat}" data-title="${esc(guide.title)}">＋ 添加资料</button>`;
           }
         }
-
-        typing.innerHTML = esc(answer).replace(/\n/g, "<br/>") + refs;
-        // 追加引导按钮（不经过 esc）
-        if (guideHtml) {
-          typing.insertAdjacentHTML("beforeend", guideHtml);
-        }
-        typing.querySelectorAll("[data-ref]").forEach(r => {
-          r.addEventListener("click", () => {
-            $$(".tab")[0].click();
-            toast("已定位到引用");
-          });
-        });
+        typing.innerHTML = esc(answer).replace(/\n/g, "<br/>") + guideHtml;
         typing.querySelectorAll(".guide-btn").forEach(btn => {
-          btn.addEventListener("click", () => {
-            openSheet(null);
-            $("#fCat").value = btn.dataset.cat;
-            $("#fTitle").value = btn.dataset.title;
-            toast("已打开新建表单");
-          });
+          btn.addEventListener("click", () => { openSheet(null); $("#fCat").value = btn.dataset.cat; $("#fTitle").value = btn.dataset.title; });
         });
         $("#chatSend").disabled = false;
         $("#chatLog").scrollTop = $("#chatLog").scrollHeight;
       }, 500 + Math.random() * 400);
     }
+    function addBubble(role, html) { const log = $("#chatLog"); const d = document.createElement("div"); d.className = "bubble " + role; d.innerHTML = html; log.appendChild(d); log.scrollTop = log.scrollHeight; return d; }
     $("#chatSend").addEventListener("click", () => { ask($("#chatInput").value); $("#chatInput").value = ""; });
     $("#chatInput").addEventListener("keydown", e => { if (e.key === "Enter") { ask($("#chatInput").value); $("#chatInput").value = ""; } });
-
     renderEntries();
   </script>
 </body>
