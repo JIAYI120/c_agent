@@ -187,47 +187,69 @@ class _EntriesScreenState extends State<EntriesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Stack(
       children: [
-        // Stats
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-          child: Row(
-            children: [
-              _statCard('${_entries.length}', '资料'),
-              const SizedBox(width: 12),
-              _statCard('${_entries.where((e) => e['embedding_status'] == 'ready').length}', '已向量'),
-            ],
-          ),
+        Column(
+          children: [
+            // Stats
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Row(
+                children: [
+                  _statCard('${_entries.length}', '资料'),
+                  const SizedBox(width: 12),
+                  _statCard('${_entries.where((e) => e['embedding_status'] == 'ready').length}', '已向量'),
+                ],
+              ),
+            ),
+            // Filters
+            SizedBox(
+              height: 36,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  _filterChip('全部', 'all'),
+                  _filterChip('档案', 'profile'),
+                  _filterChip('姨妈', 'period'),
+                  _filterChip('日程', 'schedule'),
+                  _filterChip('偏好', 'preference'),
+                  _filterChip('笔记', 'note'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            // List
+            Expanded(
+              child: _filtered.isEmpty
+                  ? const Center(child: Text('还没有资料\n点右上角 + 开始录入',
+                      style: TextStyle(color: Color(0xFFebebf54d), fontSize: 15),
+                      textAlign: TextAlign.center))
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: _filtered.length,
+                      itemBuilder: (_, i) => _entryRow(_filtered[i]),
+                    ),
+            ),
+          ],
         ),
-        // Filters
-        SizedBox(
-          height: 36,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            children: [
-              _filterChip('全部', 'all'),
-              _filterChip('档案', 'profile'),
-              _filterChip('姨妈', 'period'),
-              _filterChip('日程', 'schedule'),
-              _filterChip('偏好', 'preference'),
-              _filterChip('笔记', 'note'),
-            ],
+        // FAB top-right
+        Positioned(
+          right: 16,
+          top: 4,
+          child: GestureDetector(
+            onTap: _addEntry,
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFF0a84ff),
+                shape: BoxShape.circle,
+                boxShadow: [BoxShadow(color: const Color(0xFF0a84ff).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 2))],
+              ),
+              child: const Icon(Icons.add, color: Colors.white, size: 22),
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        // List
-        Expanded(
-          child: _filtered.isEmpty
-              ? const Center(child: Text('还没有资料\n点右下角 + 开始录入',
-                  style: TextStyle(color: Color(0xFFebebf54d), fontSize: 15),
-                  textAlign: TextAlign.center))
-              : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: _filtered.length,
-                  itemBuilder: (_, i) => _entryRow(_filtered[i]),
-                ),
         ),
       ],
     );
