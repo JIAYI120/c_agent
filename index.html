@@ -798,12 +798,33 @@
     });
 
     // Chat
+    const synonyms = {
+      "这周": ["周", "日程", "安排", "计划"],
+      "今天": ["日", "日程", "安排"],
+      "提醒": ["日程", "安排", "计划"],
+      "注意": ["日程", "安排"],
+      "吃": ["饮食", "喜好", "餐", "食"],
+      "喝": ["饮食", "喜好"],
+      "身高": ["基本信息", "身高"],
+      "体重": ["基本信息", "体重"],
+      "姨妈": ["生理", "经期"],
+    };
+
     function scoreSim(q, e) {
       const t = (e.title + e.body + (CAT[e.cat]?.name || "")).toLowerCase();
-      const c = [...new Set(q.replace(/\s/g, ""))];
+      const chars = [...new Set(q.replace(/\s/g, ""))];
       let h = 0;
-      c.forEach(ch => { if (t.includes(ch)) h++; });
-      return c.length ? h / c.length : 0;
+      chars.forEach(ch => { if (t.includes(ch)) h++; });
+      let score = chars.length ? h / chars.length : 0;
+
+      // 同义词加分
+      Object.entries(synonyms).forEach(([key, words]) => {
+        if (q.includes(key)) {
+          words.forEach(w => { if (t.includes(w)) score += 0.15; });
+        }
+      });
+
+      return Math.min(score, 1);
     }
     function retrieve(q) {
       return entries.filter(e => e.status === "ready")
