@@ -213,7 +213,7 @@
     .bubble .refs {
       margin-top: 12px; padding-top: 12px;
       border-top: 0.5px solid var(--sep);
-      display: flex; flex-direction: column; gap: 8px;
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
     }
     .ref {
       font-size: 13px; color: var(--accent);
@@ -234,7 +234,6 @@
       background: var(--accent-soft);
       border-radius: 8px;
       cursor: pointer;
-      margin-top: 6px;
     }
     .ref-more:active { background: rgba(10,132,255,0.25); }
 
