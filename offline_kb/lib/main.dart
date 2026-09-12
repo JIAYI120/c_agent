@@ -648,7 +648,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                     ),
                     child: Text(m['content']!,
-                        style: TextStyle(fontSize: 16, color: isUser ? Colors.white : Colors.white.withOpacity(0.9))),
+                        style: TextStyle(fontSize: 14, color: isUser ? Colors.white : Colors.white.withOpacity(0.9))),
                   ),
                 );
               },
