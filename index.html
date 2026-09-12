@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#000000" />
+  <title>贝贝</title>
+  <style>
+    :root {
+      --bg: #000000;
+      --bg2: #1c1c1e;
+      --bg3: #2c2c2e;
+      --card: #1c1c1e;
+      --text: #ffffff;
+      --text2: #ebebf5cc;
+      --text3: #ebebf54d;
+      --accent: #0a84ff;
+      --accent2: #0a84ffcc;
+      --ok: #30d158;
+      --warn: #ff9f0a;
+      --err: #ff453a;
+      --separator: #38383a;
+      --radius: 12px;
+      --safe-t: env(safe-area-inset-top, 20px);
+      --safe-b: env(safe-area-inset-bottom, 0px);
+      --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", "Noto Sans SC", sans-serif;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      margin: 0; padding: 0; height: 100%;
+      background: var(--bg);
+      font-family: var(--font);
+      color: var(--text);
+      overscroll-behavior: none;
+    }
+    html, body, #phone, .screen, .sheet, .chat-log, .filters {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    *::-webkit-scrollbar { width: 0; height: 0; display: none; }
+    body {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100dvh;
+    }
+    #phone {
+      width: min(100vw, 430px);
+      height: min(100dvh, 932px);
+      background: var(--bg);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    @media (min-width: 440px) and (min-height: 720px) {
+      body { background: #000; padding: 16px; }
+      #phone {
+        border-radius: 44px;
+        border: 1px solid #38383a;
+        box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 24px 64px rgba(0,0,0,.6);
+      }
+    }
+
+    /* status bar */
+    .statusbar {
+      flex: 0 0 auto;
+      height: 54px;
+      padding: 14px 24px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .statusbar .right { display: flex; gap: 6px; align-items: center; font-size: 13px; }
+    .airplane {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--ok);
+      background: rgba(48,209,88,.15);
+      padding: 2px 8px;
+      border-radius: 8px;
+      letter-spacing: .02em;
+    }
+
+    /* large title header */
+    .large-title {
+      flex: 0 0 auto;
+      padding: 0 20px 8px;
+    }
+    .large-title h1 {
+      margin: 0;
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+    }
+    .large-title .sub {
+      margin: 2px 0 0;
+      font-size: 13px;
+      color: var(--text3);
+    }
+
+    /* content */
+    main {
+      flex: 1 1 auto;
+      overflow: hidden;
+      position: relative;
+    }
+    .screen {
+      position: absolute; inset: 0;
+      overflow-y: auto;
+      padding: 8px 0 calc(8px + var(--safe-b));
+      display: none;
+    }
+    .screen.active { display: block; }
+
+    /* bottom tab bar */
+    nav.tabbar {
+      flex: 0 0 auto;
+      display: flex;
+      justify-content: space-around;
+      background: rgba(0,0,0,.85);
+      border-top: .5px solid var(--separator);
+      padding: 8px 0 calc(8px + var(--safe-b));
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    .tab {
+      border: 0; background: transparent;
+      color: var(--text3);
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      padding: 4px 16px;
+      font-size: 10px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: color .15s;
+    }
+    .tab .ico { font-size: 24px; line-height: 1; }
+    .tab.active { color: var(--accent); }
+
+    /* iOS grouped table style */
+    .section-header {
+      padding: 24px 20px 8px;
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: .02em;
+    }
+    .group {
+      background: var(--card);
+      margin: 0 16px 16px;
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .row-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: .5px solid var(--separator);
+      cursor: pointer;
+      transition: background .1s;
+    }
+    .row-item:last-child { border-bottom: none; }
+    .row-item:active { background: var(--bg3); }
+    .row-item .icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: grid; place-items: center;
+      font-size: 16px;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+    .row-item .icon.profile { background: rgba(10,132,255,.15); color: var(--accent); }
+    .row-item .icon.period { background: rgba(255,69,58,.15); color: var(--err); }
+    .row-item .icon.schedule { background: rgba(255,159,10,.15); color: var(--warn); }
+    .row-item .icon.preference { background: rgba(48,209,88,.15); color: var(--ok); }
+    .row-item .icon.note { background: rgba(191,90,242,.15); color: #bf5af2; }
+    .row-item .body { flex: 1; min-width: 0; }
+    .row-item .title {
+      font-size: 17px;
+      font-weight: 400;
+      color: var(--text);
+      margin: 0 0 2px;
+    }
+    .row-item .desc {
+      font-size: 14px;
+      color: var(--text3);
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .row-item .chevron {
+      color: var(--text3);
+      font-size: 14px;
+      margin-left: 8px;
+    }
+    .row-item .meta {
+      display: flex; gap: 6px; align-items: center;
+      margin: 6px 0 0;
+    }
+    .badge {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 1px 6px;
+      border-radius: 6px;
+      background: var(--bg3);
+      color: var(--text2);
+    }
+    .badge.ok { background: rgba(48,209,88,.15); color: var(--ok); }
+    .badge.warn { background: rgba(255,159,10,.15); color: var(--warn); }
+
+    /* stats */
+    .stats-row {
+      display: flex;
+      gap: 12px;
+      padding: 0 16px 12px;
+    }
+    .stat-card {
+      flex: 1;
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+    }
+    .stat-card .n { font-size: 28px; font-weight: 700; color: var(--accent); }
+    .stat-card .l { font-size: 13px; color: var(--text3); margin-top: 2px; }
+
+    /* filter chips */
+    .filters {
+      display: flex;
+      gap: 8px;
+      padding: 4px 16px 12px;
+      overflow-x: auto;
+    }
+    .fchip {
+      flex: 0 0 auto;
+      border: none;
+      background: var(--bg3);
+      color: var(--text2);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all .15s;
+    }
+    .fchip.on {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    /* fab */
+    .fab {
+      position: absolute;
+      right: 20px;
+      bottom: 24px;
+      width: 52px; height: 52px;
+      border-radius: 26px;
+      border: 0;
+      background: var(--accent);
+      color: #fff;
+      font-size: 24px;
+      font-weight: 300;
+      box-shadow: 0 4px 12px rgba(10,132,255,.4);
+      cursor: pointer;
+      transition: transform .1s;
+      z-index: 5;
+    }
+    .fab:active { transform: scale(.92); }
+
+    /* chat */
+    .chat-wrap {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .chat-log {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 16px 12px;
+    }
+    .bubble {
+      max-width: 82%;
+      margin: 0 0 12px;
+      padding: 10px 14px;
+      border-radius: 18px;
+      font-size: 16px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+      animation: fadeIn .2s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .bubble.user {
+      margin-left: auto;
+      background: var(--accent);
+      color: #fff;
+      border-bottom-right-radius: 6px;
+    }
+    .bubble.bot {
+      background: var(--bg2);
+      color: var(--text);
+      border-bottom-left-radius: 6px;
+    }
+    .bubble .refs {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: .5px solid var(--separator);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .ref {
+      font-size: 13px;
+      color: var(--accent);
+      background: rgba(10,132,255,.08);
+      border-radius: 10px;
+      padding: 8px 10px;
+      cursor: pointer;
+    }
+    .suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 0 16px 12px;
+    }
+    .sug {
+      border: 1px solid var(--separator);
+      background: transparent;
+      color: var(--text2);
+      border-radius: 20px;
+      padding: 8px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .sug:active { background: var(--bg3); }
+    .composer {
+      flex: 0 0 auto;
+      display: flex;
+      gap: 8px;
+      padding: 10px 16px calc(10px + var(--safe-b));
+      border-top: .5px solid var(--separator);
+      background: rgba(0,0,0,.85);
+      backdrop-filter: blur(20px);
+    }
+    .composer input {
+      flex: 1;
+      background: var(--bg2);
+      border: none;
+      border-radius: 20px;
+      color: var(--text);
+      padding: 10px 16px;
+      font-size: 16px;
+      font-family: inherit;
+      outline: none;
+    }
+    .composer input:focus { background: var(--bg3); }
+    .send {
+      width: 44px; height: 44px;
+      border-radius: 22px;
+      border: 0;
+      background: var(--accent);
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      transition: transform .1s;
+    }
+    .send:disabled { opacity: .4; cursor: not-allowed; }
+    .send:active:not(:disabled) { transform: scale(.9); }
+
+    /* sheet */
+    .sheet-backdrop {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,.5);
+      display: none;
+      z-index: 20;
+      animation: fade .2s;
+    }
+    .sheet-backdrop.open { display: block; }
+    @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+    .sheet {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      background: var(--bg2);
+      border-radius: 14px 14px 0 0;
+      padding: 12px 0 calc(16px + var(--safe-b));
+      z-index: 21;
+      transform: translateY(100%);
+      transition: transform .28s cubic-bezier(.32,.72,0,1);
+      max-height: 85%;
+      overflow-y: auto;
+    }
+    .sheet.open { transform: translateY(0); }
+    .sheet-handle {
+      width: 36px; height: 5px;
+      background: var(--bg3);
+      border-radius: 3px;
+      margin: 0 auto 12px;
+    }
+    .sheet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px 12px;
+      border-bottom: .5px solid var(--separator);
+    }
+    .sheet-header .cancel {
+      background: none; border: none;
+      color: var(--accent);
+      font-size: 16px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .sheet-header h3 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 600;
+    }
+    .sheet-header .save {
+      background: none; border: none;
+      color: var(--accent);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .sheet-body { padding: 16px 20px; }
+    label.field {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text3);
+      margin: 16px 0 6px;
+      text-transform: uppercase;
+      letter-spacing: .02em;
+    }
+    label.field:first-child { margin-top: 0; }
+    input.f, textarea.f, select.f {
+      width: 100%;
+      background: var(--bg3);
+      border: none;
+      border-radius: 10px;
+      color: var(--text);
+      padding: 12px;
+      font-size: 16px;
+      font-family: inherit;
+      outline: none;
+    }
+    input.f:focus, textarea.f:focus { background: rgba(10,132,255,.12); }
+    textarea.f { min-height: 120px; resize: vertical; line-height: 1.45; }
+    select.f { appearance: none; }
+
+    /* typing */
+    .typing {
+      display: inline-flex;
+      gap: 5px;
+      padding: 4px 0;
+    }
+    .typing i {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--text3);
+      animation: blink 1.2s infinite;
+    }
+    .typing i:nth-child(2) { animation-delay: .2s; }
+    .typing i:nth-child(3) { animation-delay: .4s; }
+    @keyframes blink {
+      0%, 80%, 100% { opacity: .25; }
+      40% { opacity: 1; }
+    }
+
+    /* toast */
+    #toast {
+      position: absolute;
+      left: 50%; bottom: 90px;
+      transform: translateX(-50%) translateY(16px);
+      background: var(--bg3);
+      color: var(--text);
+      padding: 10px 20px;
+      border-radius: 14px;
+      font-size: 14px;
+      opacity: 0;
+      pointer-events: none;
+      transition: .2s;
+      z-index: 40;
+      backdrop-filter: blur(10px);
+      border: .5px solid var(--separator);
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .empty {
+      text-align: center;
+      color: var(--text3);
+      padding: 60px 24px;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+    .empty .big { font-size: 48px; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+  <div id="phone">
+    <div class="statusbar">
+      <span id="clock">9:41</span>
+      <div class="right">
+        <span class="airplane">飞行模式</span>
+        <span>100%</span>
+      </div>
+    </div>
+
+    <div class="large-title">
+      <h1 id="pageTitle">资料</h1>
+      <p class="sub" id="pageSub">本地知识库</p>
+    </div>
+
+    <main>
+      <!-- 资料 -->
+      <section class="screen active" id="screen-entries">
+        <div class="stats-row">
+          <div class="stat-card"><div class="n" id="statCount">4</div><div class="l">资料</div></div>
+          <div class="stat-card"><div class="n" id="statReady">3</div><div class="l">已向量</div></div>
+        </div>
+        <div class="filters" id="filters">
+          <button class="fchip on" data-cat="all" type="button">全部</button>
+          <button class="fchip" data-cat="profile" type="button">档案</button>
+          <button class="fchip" data-cat="period" type="button">姨妈</button>
+          <button class="fchip" data-cat="schedule" type="button">日程</button>
+          <button class="fchip" data-cat="preference" type="button">偏好</button>
+          <button class="fchip" data-cat="note" type="button">笔记</button>
+        </div>
+        <div id="entryList"></div>
+        <button class="fab" id="fabAdd" type="button">+</button>
+      </section>
+
+      <!-- 问答 -->
+      <section class="screen" id="screen-chat">
+        <div class="chat-wrap">
+          <div class="suggestions" id="suggestions">
+            <button class="sug" type="button" data-q="我身高体重多少？">我身高体重多少</button>
+            <button class="sug" type="button" data-q="我有什么饮食偏好？">饮食偏好</button>
+            <button class="sug" type="button" data-q="这周有什么安排？">这周安排</button>
+            <button class="sug" type="button" data-q="生理期大概什么时候？">生理期</button>
+          </div>
+          <div class="chat-log" id="chatLog"></div>
+          <div class="composer">
+            <input id="chatInput" type="text" placeholder="根据我的资料回答…" autocomplete="off" />
+            <button class="send" id="chatSend" type="button">↑</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <nav class="tabbar" id="tabbar">
+      <button class="tab active" data-screen="entries" type="button">
+        <span class="ico">📋</span>资料
+      </button>
+      <button class="tab" data-screen="chat" type="button">
+        <span class="ico">💬</span>问答
+      </button>
+    </nav>
+
+    <!-- Sheet -->
+    <div class="sheet-backdrop" id="sheetBd"></div>
+    <div class="sheet" id="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <button class="cancel" id="sheetCancel" type="button">取消</button>
+        <h3 id="sheetTitle">新建资料</h3>
+        <button class="save" id="sheetSave" type="button">保存</button>
+      </div>
+      <div class="sheet-body">
+        <label class="field">标题</label>
+        <input class="f" id="fTitle" placeholder="输入标题" maxlength="40" />
+        <label class="field">分类</label>
+        <select class="f" id="fCat">
+          <option value="profile">档案</option>
+          <option value="period">姨妈</option>
+          <option value="schedule">日程</option>
+          <option value="preference">偏好</option>
+          <option value="note">笔记</option>
+          <option value="other">其他</option>
+        </select>
+        <label class="field">内容</label>
+        <textarea class="f" id="fBody" placeholder="写下你想记住的…" maxlength="20000"></textarea>
+      </div>
+    </div>
+
+    <div id="toast"></div>
+  </div>
+
+  <script>
+    const CAT = {
+      profile: { name: "档案", icon: "👤", cls: "profile" },
+      period: { name: "姨妈", icon: "🩸", cls: "period" },
+      schedule: { name: "日程", icon: "📅", cls: "schedule" },
+      preference: { name: "偏好", icon: "💚", cls: "preference" },
+      note: { name: "笔记", icon: "📝", cls: "note" },
+      other: { name: "其他", icon: "📄", cls: "note" }
+    };
+
+    const seed = [
+      { id: 1, title: "基本信息", cat: "profile", body: "身高 175cm，体重 68kg，血型 O。目标是保持体脂稳定，优先规律作息。", status: "ready", updated: "今天" },
+      { id: 2, title: "饮食偏好", cat: "preference", body: "不吃香菜。偏好清淡中餐，早餐常喝燕麦牛奶。对花生过敏。", status: "ready", updated: "昨天" },
+      { id: 3, title: "本周日程", cat: "schedule", body: "周三 19:30 牙医复诊；周五下午产品评审；周日想整理房间。", status: "ready", updated: "周一" },
+      { id: 4, title: "生理期记录", cat: "period", body: "最近一次开始：本月 3 日，周期约 28 天，经期 5 天左右。", status: "pending", updated: "刚刚" }
+    ];
+
+    let entries = [...seed];
+    let filter = "all";
+    let editingId = null;
+    const topk = 3;
+    const threshold = 0.25;
+
+    const $ = s => document.querySelector(s);
+    const $$ = s => [...document.querySelectorAll(s)];
+
+    function toast(msg) {
+      const t = $("#toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => t.classList.remove("show"), 1800);
+    }
+
+    function clock() {
+      const d = new Date();
+      $("#clock").textContent =
+        String(d.getHours()).padStart(2, "0") + ":" +
+        String(d.getMinutes()).padStart(2, "0");
+    }
+    clock(); setInterval(clock, 30000);
+
+    function renderEntries() {
+      const list = filter === "all" ? entries : entries.filter(e => e.cat === filter);
+      $("#statCount").textContent = entries.length;
+      $("#statReady").textContent = entries.filter(e => e.status === "ready").length;
+      const box = $("#entryList");
+      if (!list.length) {
+        box.innerHTML = '<div class="empty"><div class="big">📋</div>还没有资料<br/>点右下角 + 开始录入</div>';
+        return;
+      }
+      box.innerHTML = '<div class="group">' + list.map(e => {
+        const c = CAT[e.cat] || CAT.other;
+        const st = e.status === "ready"
+          ? '<span class="badge ok">已向量</span>'
+          : e.status === "pending"
+            ? '<span class="badge warn">向量中</span>'
+            : '<span class="badge">失败</span>';
+        return `
+          <div class="row-item" data-edit="${e.id}">
+            <div class="icon ${c.cls}">${c.icon}</div>
+            <div class="body">
+              <p class="title">${esc(e.title)}</p>
+              <p class="desc">${esc(e.body)}</p>
+              <div class="meta">
+                ${st}
+                <span class="badge">${esc(e.updated)}</span>
+              </div>
+            </div>
+            <span class="chevron">›</span>
+          </div>`;
+      }).join("") + '</div>';
+      box.querySelectorAll("[data-edit]").forEach(el => {
+        el.addEventListener("click", () => openSheet(Number(el.dataset.edit)));
+      });
+    }
+
+    function esc(s) {
+      return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+    }
+
+    function openSheet(id) {
+      editingId = id || null;
+      if (id) {
+        const e = entries.find(x => x.id === id);
+        if (!e) return;
+        $("#sheetTitle").textContent = "编辑";
+        $("#fTitle").value = e.title;
+        $("#fCat").value = e.cat;
+        $("#fBody").value = e.body;
+      } else {
+        $("#sheetTitle").textContent = "新建资料";
+        $("#fTitle").value = "";
+        $("#fCat").value = "profile";
+        $("#fBody").value = "";
+      }
+      $("#sheetBd").classList.add("open");
+      requestAnimationFrame(() => $("#sheet").classList.add("open"));
+    }
+
+    function closeSheet() {
+      $("#sheet").classList.remove("open");
+      setTimeout(() => $("#sheetBd").classList.remove("open"), 280);
+      editingId = null;
+    }
+
+    $("#fabAdd").addEventListener("click", () => openSheet(null));
+    $("#sheetCancel").addEventListener("click", closeSheet);
+    $("#sheetBd").addEventListener("click", closeSheet);
+
+    $("#sheetSave").addEventListener("click", () => {
+      const title = $("#fTitle").value.trim() || "未命名";
+      const cat = $("#fCat").value;
+      const body = $("#fBody").value.trim();
+      if (!body) { toast("内容不能为空"); return; }
+      const now = "刚刚";
+      if (editingId) {
+        const e = entries.find(x => x.id === editingId);
+        Object.assign(e, { title, cat, body, status: "pending", updated: now });
+        toast("已更新");
+      } else {
+        entries.unshift({ id: Date.now(), title, cat, body, status: "pending", updated: now });
+        toast("已保存");
+      }
+      closeSheet();
+      renderEntries();
+      setTimeout(() => {
+        entries.forEach(e => { if (e.status === "pending") e.status = "ready"; });
+        renderEntries();
+      }, 1200);
+    });
+
+    $("#filters").addEventListener("click", ev => {
+      const b = ev.target.closest(".fchip");
+      if (!b) return;
+      filter = b.dataset.cat;
+      $$(".fchip").forEach(x => x.classList.toggle("on", x === b));
+      renderEntries();
+    });
+
+    // tabs
+    const meta = {
+      entries: { t: "资料", s: "本地知识库" },
+      chat: { t: "问答", s: "只根据你的资料回答" }
+    };
+    $$(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        const id = tab.dataset.screen;
+        $$(".tab").forEach(t => t.classList.toggle("active", t === tab));
+        $$(".screen").forEach(s => s.classList.toggle("active", s.id === "screen-" + id));
+        $("#pageTitle").textContent = meta[id].t;
+        $("#pageSub").textContent = meta[id].s;
+      });
+    });
+
+    // chat
+    function scoreSim(q, entry) {
+      const text = (entry.title + entry.body + (CAT[entry.cat]?.name || "")).toLowerCase();
+      const chars = [...new Set(q.replace(/\s/g, ""))];
+      let hit = 0;
+      chars.forEach(ch => { if (text.includes(ch)) hit++; });
+      return chars.length ? hit / chars.length : 0;
+    }
+
+    function retrieve(q) {
+      return entries
+        .filter(e => e.status === "ready")
+        .map(e => ({ e, score: scoreSim(q, e) }))
+        .filter(x => x.score >= Math.min(threshold, 0.35))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, topk);
+    }
+
+    function mockAnswer(q, hits) {
+      if (!hits.length) return "暂无相关个人资料";
+      if (q.includes("身高") || q.includes("体重"))
+        return "根据你的档案：身高 175cm，体重 68kg。目标是保持体脂稳定、优先规律作息。";
+      if (q.includes("吃") || q.includes("饮食") || q.includes("花生") || q.includes("香菜"))
+        return "你偏好清淡中餐，早餐常燕麦牛奶；不吃香菜，对花生过敏，点餐时注意避开含花生食品。";
+      if (q.includes("周") || q.includes("安排") || q.includes("日程"))
+        return "本周安排：周三 19:30 牙医复诊；周五下午产品评审；周日想整理房间。";
+      if (q.includes("姨妈") || q.includes("生理") || q.includes("经期"))
+        return "根据你的记录：最近一次大约从本月 3 日开始，周期约 28 天，经期约 5 天。第 1–2 天容易乏力，建议少排重活。";
+      return `根据「${hits[0].e.title}」：${hits[0].e.body.slice(0, 80)}${hits[0].e.body.length > 80 ? "…" : ""}`;
+    }
+
+    function addBubble(role, html) {
+      const log = $("#chatLog");
+      const div = document.createElement("div");
+      div.className = "bubble " + role;
+      div.innerHTML = html;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+      return div;
+    }
+
+    function ask(q) {
+      q = (q || "").trim();
+      if (!q) return;
+      addBubble("user", esc(q));
+      $("#suggestions").style.display = "none";
+      const typing = addBubble("bot", '<span class="typing"><i></i><i></i><i></i></span>');
+      $("#chatSend").disabled = true;
+      setTimeout(() => {
+        const hits = retrieve(q);
+        const ans = mockAnswer(q, hits);
+        const refs = hits.length
+          ? `<div class="refs">${hits.map(h =>
+              `<div class="ref" data-ref="${h.e.id}">📎 ${esc(h.e.title)} · ${(h.score * 100).toFixed(0)}%</div>`
+            ).join("")}</div>`
+          : "";
+        typing.innerHTML = esc(ans).replace(/\n/g, "<br/>") + refs;
+        typing.querySelectorAll("[data-ref]").forEach(r => {
+          r.addEventListener("click", () => {
+            $$(".tab")[0].click();
+            toast("已定位到引用");
+          });
+        });
+        $("#chatSend").disabled = false;
+        $("#chatLog").scrollTop = $("#chatLog").scrollHeight;
+      }, 700 + Math.random() * 400);
+    }
+
+    $("#chatSend").addEventListener("click", () => { ask($("#chatInput").value); $("#chatInput").value = ""; });
+    $("#chatInput").addEventListener("keydown", e => { if (e.key === "Enter") { ask($("#chatInput").value); $("#chatInput").value = ""; } });
+    $$(".sug").forEach(b => b.addEventListener("click", () => ask(b.dataset.q)));
+
+    renderEntries();
+  </script>
+</body>
+</html>

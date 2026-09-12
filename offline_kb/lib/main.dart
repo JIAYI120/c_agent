@@ -18,10 +18,10 @@ class BeibeiApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0f1419),
-        colorScheme: ColorScheme.dark(
-          primary: const Color(0xFF5b9fd4),
-          surface: const Color(0xFF161c24),
+        scaffoldBackgroundColor: Colors.black,
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFF0a84ff),
+          surface: Color(0xFF1c1c1e),
         ),
       ),
       home: const MainScreen(),
@@ -72,24 +72,62 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final titles = ['资料', '问答'];
+    final subs = ['本地知识库', '只根据你的资料回答'];
+
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: [
-          EntriesScreen(db: _db),
-          ChatScreen(db: _db),
-        ],
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Large title header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(titles[_currentIndex],
+                        style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w700, color: Colors.white)),
+                    const SizedBox(height: 2),
+                    Text(subs[_currentIndex],
+                        style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.3))),
+                  ],
+                ),
+              ),
+            ),
+            // Content
+            Expanded(
+              child: IndexedStack(
+                index: _currentIndex,
+                children: [
+                  EntriesScreen(db: _db),
+                  ChatScreen(db: _db),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (i) => setState(() => _currentIndex = i),
-        backgroundColor: const Color(0xFF0f1419),
-        selectedItemColor: const Color(0xFF5b9fd4),
-        unselectedItemColor: const Color(0xFF5c6b7f),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.folder), label: '资料'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat), label: '问答'),
-        ],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: const Color(0xFF38383a), width: 0.5)),
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (i) => setState(() => _currentIndex = i),
+          backgroundColor: Colors.black.withOpacity(0.85),
+          selectedItemColor: const Color(0xFF0a84ff),
+          unselectedItemColor: Colors.white.withOpacity(0.3),
+          selectedFontSize: 10,
+          unselectedFontSize: 10,
+          type: BottomNavigationBarType.fixed,
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.description_outlined, size: 24), label: '资料'),
+            BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline, size: 24), label: '问答'),
+          ],
+        ),
       ),
     );
   }
@@ -122,6 +160,15 @@ class _EntriesScreenState extends State<EntriesScreen> {
   List<Map<String, dynamic>> get _filtered =>
       _filter == 'all' ? _entries : _entries.where((e) => e['category'] == _filter).toList();
 
+  final Map<String, Map<String, dynamic>> _catMeta = {
+    'profile': {'name': '档案', 'icon': Icons.person, 'color': const Color(0xFF0a84ff)},
+    'period': {'name': '姨妈', 'icon': Icons.favorite, 'color': const Color(0xFFff453a)},
+    'schedule': {'name': '日程', 'icon': Icons.calendar_today, 'color': const Color(0xFFff9f0a)},
+    'preference': {'name': '偏好', 'icon': Icons.eco, 'color': const Color(0xFF30d158)},
+    'note': {'name': '笔记', 'icon': Icons.edit_note, 'color': const Color(0xFFbf5af2)},
+    'other': {'name': '其他', 'icon': Icons.description, 'color': const Color(0xFFbf5af2)},
+  };
+
   Future<void> _addEntry() async {
     final result = await Navigator.push<Map<String, String>>(
       context,
@@ -142,23 +189,23 @@ class _EntriesScreenState extends State<EntriesScreen> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const SizedBox(height: 48),
+        // Stats
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
           child: Row(
             children: [
-              const Text('资料', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Color(0xFFe8eef6))),
-              const Spacer(),
-              Text('${_entries.length}条', style: const TextStyle(color: Color(0xFF8b9bb0))),
+              _statCard('${_entries.length}', '资料'),
+              const SizedBox(width: 12),
+              _statCard('${_entries.where((e) => e['embedding_status'] == 'ready').length}', '已向量'),
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        // Filters
         SizedBox(
-          height: 40,
+          height: 36,
           child: ListView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             children: [
               _filterChip('全部', 'all'),
               _filterChip('档案', 'profile'),
@@ -169,163 +216,257 @@ class _EntriesScreenState extends State<EntriesScreen> {
             ],
           ),
         ),
+        const SizedBox(height: 8),
+        // List
         Expanded(
           child: _filtered.isEmpty
-              ? const Center(child: Text('还没有资料\n点右下角 + 录入', style: TextStyle(color: Color(0xFF5c6b7f)), textAlign: TextAlign.center))
+              ? const Center(child: Text('还没有资料\n点右下角 + 开始录入',
+                  style: TextStyle(color: Color(0xFFebebf54d), fontSize: 15),
+                  textAlign: TextAlign.center))
               : ListView.builder(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: _filtered.length,
-                  itemBuilder: (_, i) => _entryCard(_filtered[i]),
+                  itemBuilder: (_, i) => _entryRow(_filtered[i]),
                 ),
         ),
       ],
     );
   }
 
-  Widget _filterChip(String label, String value) {
-    final selected = _filter == value;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: ChoiceChip(
-        label: Text(label),
-        selected: selected,
-        onSelected: (_) => setState(() => _filter = value),
-        selectedColor: const Color(0xFF5b9fd4).withOpacity(0.2),
-        backgroundColor: const Color(0xFF161c24),
-        labelStyle: TextStyle(color: selected ? const Color(0xFF5b9fd4) : const Color(0xFF8b9bb0)),
+  Widget _statCard(String n, String l) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1c1c1e),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(n, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: Color(0xFF0a84ff))),
+          const SizedBox(height: 2),
+          Text(l, style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.3))),
+        ]),
       ),
     );
   }
 
-  Widget _entryCard(Map<String, dynamic> entry) {
-    final cat = entry['category'] as String;
-    final catName = {'profile': '档案', 'period': '姨妈', 'schedule': '日程', 'preference': '偏好', 'note': '笔记'}[cat] ?? cat;
-    final status = entry['embedding_status'] as String;
-    final statusColor = status == 'ready' ? const Color(0xFF3dbf7a) : const Color(0xFFe0a84a);
-    final statusText = status == 'ready' ? '已向量' : '向量中…';
+  Widget _filterChip(String label, String value) {
+    final selected = _filter == value;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: ChoiceChip(
+        label: Text(label),
+        selected: selected,
+        onSelected: (_) => setState(() => _filter = value),
+        selectedColor: const Color(0xFF0a84ff),
+        backgroundColor: const Color(0xFF2c2c2e),
+        labelStyle: TextStyle(
+          color: selected ? Colors.white : Colors.white.withOpacity(0.6),
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      ),
+    );
+  }
 
-    return Card(
-      color: const Color(0xFF1a222d),
-      margin: const EdgeInsets.only(bottom: 10),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _entryRow(Map<String, dynamic> entry) {
+    final cat = entry['category'] as String;
+    final meta = _catMeta[cat] ?? _catMeta['other']!;
+    final status = entry['embedding_status'] as String;
+    final statusColor = status == 'ready' ? const Color(0xFF30d158) : const Color(0xFFff9f0a);
+    final statusText = status == 'ready' ? '已向量' : '向量中';
+
+    return GestureDetector(
+      onTap: () async {
+        final result = await Navigator.push<Map<String, String>>(
+          context,
+          MaterialPageRoute(builder: (_) => EntryFormScreen(entry: entry)),
+        );
+        if (result != null && widget.db != null) {
+          await widget.db!.update('entries', {
+            ...result,
+            'embedding_status': 'pending',
+            'updated_at': DateTime.now().toIso8601String(),
+          }, where: 'id = ?', whereArgs: [entry['id']]);
+          _loadEntries();
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: Color(0xFF38383a), width: 0.5)),
+        ),
+        child: Row(
           children: [
-            Text(entry['title'] as String, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 4),
-            Text(entry['body'] as String, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF8b9bb0), fontSize: 13)),
-            const SizedBox(height: 8),
-            Row(children: [
-              _chip(catName),
-              const SizedBox(width: 6),
-              _chip(statusText, color: statusColor),
-            ]),
+            // Icon
+            Container(
+              width: 32, height: 32,
+              decoration: BoxDecoration(
+                color: (meta['color'] as Color).withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(meta['icon'] as IconData, size: 16, color: meta['color'] as Color),
+            ),
+            const SizedBox(width: 12),
+            // Body
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(entry['title'] as String,
+                      style: const TextStyle(fontSize: 17, color: Colors.white)),
+                  const SizedBox(height: 2),
+                  Text(entry['body'] as String,
+                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.3))),
+                  const SizedBox(height: 6),
+                  Row(children: [
+                    _badge(statusText, statusColor),
+                    const SizedBox(width: 6),
+                    _badge(entry['updated_at']?.toString().substring(0, 10) ?? '', Colors.white.withOpacity(0.3)),
+                  ]),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: Colors.white.withOpacity(0.2), size: 18),
           ],
         ),
       ),
     );
   }
 
-  Widget _chip(String label, {Color color = const Color(0xFF8b9bb0)}) {
+  Widget _badge(String text, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(999),
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(6),
       ),
-      child: Text(label, style: TextStyle(color: color, fontSize: 11)),
+      child: Text(text, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w500)),
     );
   }
 }
 
 class EntryFormScreen extends StatefulWidget {
-  const EntryFormScreen({super.key});
+  final Map<String, dynamic>? entry;
+  const EntryFormScreen({super.key, this.entry});
 
   @override
   State<EntryFormScreen> createState() => _EntryFormScreenState();
 }
 
 class _EntryFormScreenState extends State<EntryFormScreen> {
-  final _titleCtrl = TextEditingController();
-  final _bodyCtrl = TextEditingController();
-  String _category = 'profile';
+  late final TextEditingController _titleCtrl;
+  late final TextEditingController _bodyCtrl;
+  late String _category;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleCtrl = TextEditingController(text: widget.entry?['title'] as String? ?? '');
+    _bodyCtrl = TextEditingController(text: widget.entry?['body'] as String? ?? '');
+    _category = widget.entry?['category'] as String? ?? 'profile';
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f1419),
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('新建资料'),
-        backgroundColor: const Color(0xFF0f1419),
+        backgroundColor: Colors.black,
+        leading: TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('取消', style: TextStyle(color: Color(0xFF0a84ff), fontSize: 16)),
+        ),
+        title: Text(widget.entry != null ? '编辑' : '新建资料',
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+        actions: [
+          TextButton(
+            onPressed: () {
+              if (_titleCtrl.text.isNotEmpty && _bodyCtrl.text.isNotEmpty) {
+                Navigator.pop(context, {
+                  'title': _titleCtrl.text,
+                  'body': _bodyCtrl.text,
+                  'category': _category,
+                });
+              }
+            },
+            child: const Text('保存', style: TextStyle(color: Color(0xFF0a84ff), fontSize: 16, fontWeight: FontWeight.w600)),
+          ),
+        ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: _titleCtrl,
-              decoration: InputDecoration(
-                labelText: '标题',
-                labelStyle: const TextStyle(color: Color(0xFF8b9bb0)),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF2a3544))),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF5b9fd4))),
-              ),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              value: _category,
-              dropdownColor: const Color(0xFF161c24),
-              decoration: InputDecoration(
-                labelText: '分类',
-                labelStyle: const TextStyle(color: Color(0xFF8b9bb0)),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF2a3544))),
-              ),
-              items: const [
-                DropdownMenuItem(value: 'profile', child: Text('档案')),
-                DropdownMenuItem(value: 'period', child: Text('姨妈')),
-                DropdownMenuItem(value: 'schedule', child: Text('日程')),
-                DropdownMenuItem(value: 'preference', child: Text('偏好')),
-                DropdownMenuItem(value: 'note', child: Text('笔记')),
-              ],
-              onChanged: (v) => setState(() => _category = v!),
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: TextField(
-                controller: _bodyCtrl,
-                maxLines: null,
-                expands: true,
-                decoration: InputDecoration(
-                  labelText: '内容',
-                  labelStyle: const TextStyle(color: Color(0xFF8b9bb0)),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF2a3544))),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF5b9fd4))),
-                ),
-              ),
-            ),
+            _label('标题'),
+            _input(_titleCtrl, '输入标题'),
             const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: () {
-                  if (_titleCtrl.text.isNotEmpty && _bodyCtrl.text.isNotEmpty) {
-                    Navigator.pop(context, {
-                      'title': _titleCtrl.text,
-                      'body': _bodyCtrl.text,
-                      'category': _category,
-                    });
-                  }
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF5b9fd4)),
-                child: const Text('保存'),
-              ),
-            ),
+            _label('分类'),
+            _categoryPicker(),
+            const SizedBox(height: 16),
+            _label('内容'),
+            _input(_bodyCtrl, '写下你想记住的…', maxLines: null, minLines: 6),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _label(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Text(text.toUpperCase(),
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.white.withOpacity(0.3))),
+    );
+  }
+
+  Widget _input(TextEditingController ctrl, String hint, {int? maxLines, int minLines = 1}) {
+    return TextField(
+      controller: ctrl,
+      maxLines: maxLines,
+      minLines: minLines,
+      style: const TextStyle(fontSize: 16, color: Colors.white),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(color: Colors.white.withOpacity(0.2)),
+        filled: true,
+        fillColor: const Color(0xFF2c2c2e),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color(0xFF0a84ff), width: 1),
+        ),
+      ),
+    );
+  }
+
+  Widget _categoryPicker() {
+    final cats = [
+      {'key': 'profile', 'name': '档案'},
+      {'key': 'period', 'name': '姨妈'},
+      {'key': 'schedule', 'name': '日程'},
+      {'key': 'preference', 'name': '偏好'},
+      {'key': 'note', 'name': '笔记'},
+    ];
+    return Wrap(
+      spacing: 8,
+      children: cats.map((c) {
+        final selected = _category == c['key'];
+        return ChoiceChip(
+          label: Text(c['name']!),
+          selected: selected,
+          onSelected: (_) => setState(() => _category = c['key']!),
+          selectedColor: const Color(0xFF0a84ff),
+          backgroundColor: const Color(0xFF2c2c2e),
+          labelStyle: TextStyle(
+            color: selected ? Colors.white : Colors.white.withOpacity(0.6),
+          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        );
+      }).toList(),
     );
   }
 }
@@ -348,7 +489,6 @@ class _ChatScreenState extends State<ChatScreen> {
     final entries = await widget.db!.query('entries', where: "embedding_status = 'ready'");
     if (entries.isEmpty) return [];
 
-    // 简单关键词匹配模拟检索
     final scored = entries.map((e) {
       final text = '${e['title']} ${e['body']}'.toLowerCase();
       final chars = query.toLowerCase().split('').toSet();
@@ -393,15 +533,6 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const SizedBox(height: 48),
-        const Padding(
-          padding: EdgeInsets.all(16),
-          child: Row(children: [
-            Text('问答', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600)),
-            Spacer(),
-            Text('只根据你的资料回答', style: TextStyle(color: Color(0xFF8b9bb0), fontSize: 12)),
-          ]),
-        ),
         if (_messages.isEmpty)
           Expanded(
             child: Center(
@@ -413,7 +544,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   _suggestion('我身高体重多少？'),
                   _suggestion('饮食偏好'),
                   _suggestion('这周安排'),
-                  _suggestion('生理期大概时间'),
+                  _suggestion('生理期'),
                 ],
               ),
             ),
@@ -421,7 +552,7 @@ class _ChatScreenState extends State<ChatScreen> {
         else
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               itemCount: _messages.length,
               itemBuilder: (_, i) {
                 final m = _messages[i];
@@ -429,47 +560,67 @@ class _ChatScreenState extends State<ChatScreen> {
                 return Align(
                   alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
                   child: Container(
-                    margin: const EdgeInsets.only(bottom: 10),
+                    margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(12),
-                    constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.85),
+                    constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.82),
                     decoration: BoxDecoration(
-                      color: isUser ? const Color(0xFF5b9fd4).withOpacity(0.15) : const Color(0xFF1a222d),
-                      border: Border.all(color: isUser ? const Color(0xFF5b9fd4).withOpacity(0.3) : const Color(0xFF2a3544)),
-                      borderRadius: BorderRadius.circular(14),
+                      color: isUser ? const Color(0xFF0a84ff) : const Color(0xFF1c1c1e),
+                      borderRadius: BorderRadius.only(
+                        topLeft: const Radius.circular(18),
+                        topRight: const Radius.circular(18),
+                        bottomLeft: Radius.circular(isUser ? 18 : 6),
+                        bottomRight: Radius.circular(isUser ? 6 : 18),
+                      ),
                     ),
-                    child: Text(m['content']!, style: const TextStyle(fontSize: 14)),
+                    child: Text(m['content']!,
+                        style: TextStyle(fontSize: 16, color: isUser ? Colors.white : Colors.white.withOpacity(0.9))),
                   ),
                 );
               },
             ),
           ),
-        if (_loading) const Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator(color: Color(0xFF5b9fd4))),
+        if (_loading)
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: SizedBox(
+              width: 20, height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2, color: const Color(0xFF0a84ff)),
+            ),
+          ),
         Container(
-          padding: const EdgeInsets.all(12),
-          decoration: const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFF2a3544)))),
+          padding: EdgeInsets.fromLTRB(16, 10, 16, MediaQuery.of(context).padding.bottom + 10),
+          decoration: const BoxDecoration(
+            border: Border(top: BorderSide(color: Color(0xFF38383a), width: 0.5)),
+          ),
           child: Row(children: [
             Expanded(
               child: TextField(
                 controller: _inputCtrl,
+                style: const TextStyle(fontSize: 16, color: Colors.white),
                 decoration: InputDecoration(
                   hintText: '根据我的资料回答…',
-                  hintStyle: const TextStyle(color: Color(0xFF5c6b7f)),
+                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
                   filled: true,
-                  fillColor: const Color(0xFF161c24),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF2a3544))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF2a3544))),
+                  fillColor: const Color(0xFF1c1c1e),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 ),
                 onSubmitted: (_) => _send(),
               ),
             ),
             const SizedBox(width: 8),
-            SizedBox(
-              width: 48,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: _send,
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF5b9fd4), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
-                child: const Icon(Icons.arrow_upward, color: Colors.white),
+            GestureDetector(
+              onTap: _send,
+              child: Container(
+                width: 44, height: 44,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF0a84ff),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.arrow_upward, color: Colors.white, size: 20),
               ),
             ),
           ]),
@@ -480,9 +631,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _suggestion(String text) {
     return ActionChip(
-      label: Text(text, style: const TextStyle(color: Color(0xFF8b9bb0))),
+      label: Text(text, style: TextStyle(color: Colors.white.withOpacity(0.6))),
       backgroundColor: Colors.transparent,
-      side: const BorderSide(color: Color(0xFF2a3544), style: BorderStyle.solid),
+      side: BorderSide(color: const Color(0xFF38383a)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       onPressed: () {
         _inputCtrl.text = text;
         _send();
