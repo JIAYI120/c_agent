@@ -643,6 +643,7 @@
 3. 只提取问题问到的部分，不要输出整段资料
 4. 如果问"这个月/上个月"，根据当前日期判断
 5. 如果知识库没有相关信息，只说"暂无记录"
+6. 回答末尾加上引用的资料编号，格式：|||REF:1,3|||
 
 【个人知识库】
 ${data}
@@ -651,12 +652,12 @@ ${data}
     }
 
     // Mock LLM（原型演示用，打包后替换为 Qwen API）
-    // 所有资料都给 Qwen，让 Qwen 自己判断
     function mockLlmResponse(prompt, q, hits) {
-      // 按时间排序，最新的在前
       const sorted = [...hits].sort((a, b) => new Date(b.e.updated) - new Date(a.e.updated));
-      // 返回最新的一条，模拟 Qwen 会判断返回最新的
-      return sorted[0]?.e.body || "暂无记录";
+      const answer = sorted[0]?.e.body || "暂无记录";
+      // 模拟 Qwen 输出引用编号（打包后由 Qwen 自己判断）
+      const refIds = sorted.slice(0, 2).map(h => hits.indexOf(h) + 1).join(",");
+      return `${answer}|||REF:${refIds}|||`;
     }
 
     function guidePrompt(q) {
@@ -682,18 +683,22 @@ ${data}
           if (hits.length) {
             const prompt = buildRagPrompt(q, hits);
             console.log("RAG Prompt:", prompt);
-            answer = mockLlmResponse(prompt, q, hits);
-            // 生成引用标签：只显示匹配度最高且最新的一条
-            const sorted = [...hits].sort((a, b) => {
-              if (b.score !== a.score) return b.score - a.score;
-              return new Date(b.e.updated) - new Date(a.e.updated);
-            });
-            const topHit = sorted[0];
-            const dateStr = topHit.e.updated.slice(0, 10); // 只取年月日
-            refsHtml = `<div class="refs">
-              <div class="ref" data-ref="${topHit.e.id}">${esc(topHit.e.title)} · ${dateStr}</div>
-              ${hits.length > 1 ? `<div class="ref-more" data-refs='${JSON.stringify(hits.map(h => ({id:h.e.id, title:h.e.title, body:h.e.body, date:h.e.updated.slice(0,10)})))}'>...</div>` : ''}
-            </div>`;
+            const rawAnswer = mockLlmResponse(prompt, q, hits);
+            // 解析引用编号，从回答中删除标记
+            const refMatch = rawAnswer.match(/\|\|\|REF:([\d,]+)\|\|\|/);
+            const refIds = refMatch ? refMatch[1].split(",").map(Number) : [];
+            answer = rawAnswer.replace(/\|\|\|REF:[\d,]+\|\|\|/, "").trim();
+            // 只展示 Qwen 引用的资料
+            const refHits = refIds.map(i => hits[i - 1]).filter(Boolean);
+            if (refHits.length) {
+              const sorted = [...refHits].sort((a, b) => new Date(b.e.updated) - new Date(a.e.updated));
+              const topHit = sorted[0];
+              const dateStr = topHit.e.updated.slice(0, 10);
+              refsHtml = `<div class="refs">
+                <div class="ref" data-ref="${topHit.e.id}">${esc(topHit.e.title)} · ${dateStr}</div>
+                ${sorted.length > 1 ? `<div class="ref-more" data-refs='${JSON.stringify(sorted.map(h => ({id:h.e.id, title:h.e.title, body:h.e.body, date:h.e.updated.slice(0,10)})))}'>...</div>` : ''}
+              </div>`;
+            }
           } else {
             const guide = guidePrompt(q);
             answer = guide.text;
