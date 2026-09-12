@@ -580,6 +580,23 @@
         <p class="detail-content" id="detailContent"></p>
       </div>
     </div>
+
+    <!-- 删除确认弹窗 -->
+    <div class="modal-overlay" id="deleteOverlay">
+      <div class="modal" style="width: 70%; max-width: 260px;">
+        <div class="modal-header">
+          <h3>确认删除</h3>
+          <button class="modal-close" id="deleteCancel">×</button>
+        </div>
+        <div style="padding: 16px; text-align: center;">
+          <p id="deleteMsg" style="margin: 0 0 16px; font-size: 14px; color: var(--text2);"></p>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn" id="deleteCancelBtn" style="flex:1; margin:0;">取消</button>
+            <button class="btn" id="deleteConfirmBtn" style="flex:1; margin:0; background: var(--err); border-color: var(--err); color: #fff;">删除</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   <script>
     const CAT = { info: { name: "信息" }, like: { name: "喜好" }, plan: { name: "日程" }, other: { name: "其它" } };
@@ -625,12 +642,12 @@
         el.addEventListener("click", () => {
           const id = Number(el.dataset.id);
           if (deleteMode) {
-            // 删除模式：点击删除
+            // 删除模式：弹出自定义确认弹窗
             const entry = entries.find(e => e.id === id);
-            if (entry && confirm(`确定删除「${entry.title}」？`)) {
-              entries = entries.filter(e => e.id !== id);
-              renderEntries();
-              toast("已删除");
+            if (entry) {
+              pendingDeleteId = id;
+              $("#deleteMsg").textContent = `确定删除「${entry.title}」？`;
+              $("#deleteOverlay").classList.add("open");
             }
           } else {
             // 普通模式：点击编辑
@@ -869,6 +886,23 @@ ${data}
     });
     $("#detailClose").addEventListener("click", () => {
       $("#detailPanel").classList.remove("open");
+    });
+
+    // 删除确认弹窗
+    let pendingDeleteId = null;
+    $("#deleteOverlay").addEventListener("click", (e) => {
+      if (e.target === e.currentTarget) $("#deleteOverlay").classList.remove("open");
+    });
+    $("#deleteCancel").addEventListener("click", () => $("#deleteOverlay").classList.remove("open"));
+    $("#deleteCancelBtn").addEventListener("click", () => $("#deleteOverlay").classList.remove("open"));
+    $("#deleteConfirmBtn").addEventListener("click", () => {
+      if (pendingDeleteId) {
+        entries = entries.filter(e => e.id !== pendingDeleteId);
+        pendingDeleteId = null;
+        $("#deleteOverlay").classList.remove("open");
+        renderEntries();
+        toast("已删除");
+      }
     });
 
     renderEntries();
