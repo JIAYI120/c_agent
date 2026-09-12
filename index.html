@@ -756,7 +756,17 @@ ${data}
         ).join("");
         $("#modalOverlay").classList.add("open");
       }
-      // 点击来源项 → 显示详情
+      // 点击单条来源 → 直接显示详情
+      if (e.target.classList.contains("ref")) {
+        const id = e.target.dataset.ref;
+        const entry = entries.find(e => e.id == id);
+        if (entry) {
+          $("#detailEntryTitle").textContent = entry.title;
+          $("#detailContent").textContent = entry.body;
+          $("#detailPanel").classList.add("open");
+        }
+      }
+      // 点击来源列表项 → 显示详情
       if (e.target.closest(".modal-item")) {
         const item = e.target.closest(".modal-item");
         $("#detailEntryTitle").textContent = item.dataset.title;
