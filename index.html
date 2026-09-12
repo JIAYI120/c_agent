@@ -304,6 +304,19 @@
       transition: background 0.12s;
     }
     .ref:active { background: rgba(10,132,255,0.25); }
+    .guide-btn {
+      display: inline-block;
+      margin-top: 10px;
+      background: rgba(10,132,255,0.15);
+      color: var(--accent);
+      border: none;
+      border-radius: 14px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .guide-btn:active { background: rgba(10,132,255,0.25); }
 
     /* ── Sheet ── */
     .sheet-backdrop {
@@ -833,6 +846,81 @@
       "嗯嗯": "嗯嗯~",
     };
 
+    // 意图检测
+    function detectIntent(q) {
+      const lower = q.toLowerCase();
+      if (/\b(摘要|整理|汇总|总结|归纳)\b/.test(q)) return "summary";
+      if (/\b(提醒|注意|别忘|本周|这周|明天|今天|日程)\b/.test(q)) return "remind";
+      if (/\b(吃|喝|餐|食|晚餐|午餐|早餐|推荐)\b/.test(q)) return "suggest";
+      if (/\b(对比|变化|比较|差)\b/.test(q)) return "compare";
+      if (/\b(缺|还差|还少|补充|还需要)\b/.test(q)) return "missing";
+      return "qa";
+    }
+
+    // 没命中时引导录入
+    function guidePrompt(q) {
+      const cats = [
+        { key: "info", hint: "身高体重、血型、过敏史等基本信息" },
+        { key: "like", hint: "饮食偏好、喜欢的颜色、运动习惯等" },
+        { key: "plan", hint: "日程安排、待办事项、约会等" },
+      ];
+      const matched = cats.find(c => q.includes(c.hint.slice(0, 4))) || cats[0];
+      return {
+        text: `我还不知道这个呢，要告诉我吗？\n\n你可以添加到「${matched.key === "info" ? "信息" : matched.key === "like" ? "喜好" : "日程"}」分类里~`,
+        cat: matched.key,
+        title: q.slice(0, 20),
+      };
+    }
+
+    // 交互式回答
+    function interactiveAnswer(q, hits, intent) {
+      if (!hits.length) {
+        const guide = guidePrompt(q);
+        return { text: guide.text, guide: guide };
+      }
+      switch (intent) {
+        case "summary": {
+          const all = hits.map(h => h.e.body).join("\n");
+          return { text: `根据你的资料，帮你整理一下：\n\n${all}`, guide: null };
+        }
+        case "remind": {
+          const schedule = hits.filter(h => h.e.cat === "plan");
+          if (schedule.length) {
+            return { text: `温馨提醒：\n${schedule.map(h => `• ${h.e.body}`).join("\n")}\n\n别忘了哦~`, guide: null };
+          }
+          return { text: `暂时没有日程提醒。你可以告诉我你的安排，我会帮你记住~`, guide: null };
+        }
+        case "suggest": {
+          const likes = hits.filter(h => h.e.cat === "like");
+          if (likes.length) {
+            return { text: `根据你的喜好：\n${likes.map(h => h.e.body).join("\n")}\n\n今晚可以考虑清淡的中餐~`, guide: null };
+          }
+          return { text: `我还不太了解你的口味，要告诉我吗？`, guide: { cat: "like", title: "饮食喜好", text: "" } };
+        }
+        case "compare": {
+          if (hits.length >= 2) {
+            return { text: `对比一下：\n\n📌 ${hits[0].e.title}：${hits[0].e.body}\n📌 ${hits[1].e.title}：${hits[1].e.body}`, guide: null };
+          }
+          return { text: `需要更多资料才能对比，要补充吗？`, guide: { cat: hits[0]?.e.cat || "info", title: q.slice(0, 20), text: "" } };
+        }
+        case "missing": {
+          const known = new Set(entries.map(e => e.cat));
+          const all = ["info", "like", "plan"];
+          const missing = all.filter(c => !known.has(c));
+          if (missing.length) {
+            const names = { info: "基本信息", like: "喜好", plan: "日程" };
+            return { text: `你还缺这些分类的资料：\n${missing.map(c => `• ${names[c]}`).join("\n")}\n\n要补充吗？`, guide: { cat: missing[0], title: names[missing[0]], text: "" } };
+          }
+          return { text: `资料挺全的！如果有新信息随时告诉我~`, guide: null };
+        }
+        default: {
+          // 普通问答，关心式语气
+          const body = hits.map(h => h.e.body).join("\n");
+          return { text: `根据你的资料：\n${body}\n\n有需要补充的随时告诉我哦~`, guide: null };
+        }
+      }
+    }
+
     function ask(q) {
       q = (q || "").trim();
       if (!q) return;
@@ -841,28 +929,29 @@
       $("#chatSend").disabled = true;
 
       setTimeout(() => {
-        let answer;
+        let answer, refs = "";
         const lowerQ = q.toLowerCase();
 
-        // 1. 问候匹配
         if (greetings[lowerQ]) {
           answer = greetings[lowerQ];
         } else {
-          // 2. 检索资料
           const hits = retrieve(q);
-          if (hits.length) {
-            answer = mockAnswer(q, hits);
-          } else {
-            answer = "暂无相关个人资料，你可以试试问我身高、日程、喜好等~";
+          const intent = detectIntent(q);
+          const result = interactiveAnswer(q, hits, intent);
+          answer = result.text;
+
+          if (hits.length && intent === "qa") {
+            refs = `<div class="refs">${hits.map(h =>
+              `<div class="ref" data-ref="${h.e.id}">📎 ${esc(h.e.title)} · ${(h.score * 100).toFixed(0)}%</div>`
+            ).join("")}</div>`;
+          }
+
+          // 引导录入按钮
+          if (result.guide) {
+            answer += `\n\n<button class="guide-btn" data-cat="${result.guide.cat}" data-title="${esc(result.guide.title)}">＋ 添加资料</button>`;
           }
         }
 
-        const hits = retrieve(q);
-        const refs = hits.length && !greetings[lowerQ]
-          ? `<div class="refs">${hits.map(h =>
-              `<div class="ref" data-ref="${h.e.id}">📎 ${esc(h.e.title)} · ${(h.score * 100).toFixed(0)}%</div>`
-            ).join("")}</div>`
-          : "";
         typing.innerHTML = esc(answer).replace(/\n/g, "<br/>") + refs;
         typing.querySelectorAll("[data-ref]").forEach(r => {
           r.addEventListener("click", () => {
@@ -870,9 +959,17 @@
             toast("已定位到引用");
           });
         });
+        typing.querySelectorAll(".guide-btn").forEach(btn => {
+          btn.addEventListener("click", () => {
+            openSheet(null);
+            $("#fCat").value = btn.dataset.cat;
+            $("#fTitle").value = btn.dataset.title;
+            toast("已打开新建表单");
+          });
+        });
         $("#chatSend").disabled = false;
         $("#chatLog").scrollTop = $("#chatLog").scrollHeight;
-      }, 400 + Math.random() * 300);
+      }, 500 + Math.random() * 400);
     }
     $("#chatSend").addEventListener("click", () => { ask($("#chatInput").value); $("#chatInput").value = ""; });
     $("#chatInput").addEventListener("keydown", e => { if (e.key === "Enter") { ask($("#chatInput").value); $("#chatInput").value = ""; } });
