@@ -962,15 +962,24 @@
       const parts = body.split(/[；;。\n]/).filter(s => s.trim());
       if (parts.length <= 1) return body;
 
-      const keywords = Object.keys(synonyms).filter(k => q.includes(k));
-      keywords.push(...q.replace(/[？?！!。，,.]/g, "").split("").filter(c => c.length));
+      // 提取有意义的关键词（2字以上）
+      const stopWords = "的了吗呢吧啊哦呀这那什么有为是否将就把被让给对从在";
+      const keywords = [];
+      // 从同义词表找匹配的key
+      Object.keys(synonyms).forEach(k => {
+        if (q.includes(k) && k.length >= 2) keywords.push(k);
+      });
+      // 从q提取2字以上的词
+      for (let i = 0; i < q.length - 1; i++) {
+        const word = q.slice(i, i + 2);
+        if (!stopWords.includes(word[0]) && !stopWords.includes(word[1])) {
+          keywords.push(word);
+        }
+      }
 
       const matched = parts.filter(p => {
         const lower = p.toLowerCase();
-        return keywords.some(k => lower.includes(k)) ||
-          Object.entries(synonyms).some(([key, words]) =>
-            q.includes(key) && words.some(w => lower.includes(w))
-          );
+        return keywords.some(k => lower.includes(k));
       });
 
       return matched.length ? matched.join("；") : body;
@@ -993,9 +1002,9 @@
           if (items.length) {
             const lines = items.map(h => {
               const relevant = extractRelevant(q, h.e.body);
-              return `• ${h.e.title}：${relevant}`;
+              return `• ${relevant}`;
             });
-            return { text: `温馨提醒：\n${lines.join("\n")}\n\n别忘了哦~`, guide: null };
+            return { text: lines.join("\n"), guide: null };
           }
           return { text: `暂时没有安排，要添加日程吗？`, guide: { cat: "plan", title: "新日程", text: "" } };
         }
@@ -1023,12 +1032,11 @@
           return { text: `资料挺全的！如果有新信息随时告诉我~`, guide: null };
         }
         default: {
-          // 普通问答，只展示匹配片段
           const relevantParts = hits.map(h => {
             const relevant = extractRelevant(q, h.e.body);
-            return `${h.e.title}：${relevant}`;
+            return `${relevant}`;
           });
-          return { text: `根据你的资料：\n${relevantParts.join("\n")}\n\n有需要补充的随时告诉我哦~`, guide: null };
+          return { text: relevantParts.join("\n"), guide: null };
         }
       }
     }
