@@ -1000,10 +1000,7 @@
           const schedule = hits.filter(h => h.e.cat === "plan");
           const items = schedule.length ? schedule : hits;
           if (items.length) {
-            const lines = items.map(h => {
-              const relevant = extractRelevant(q, h.e.body);
-              return `• ${relevant}`;
-            });
+            const lines = items.map(h => extractRelevant(q, h.e.body));
             return { text: lines.join("\n"), guide: null };
           }
           return { text: `暂时没有安排，要添加日程吗？`, guide: { cat: "plan", title: "新日程", text: "" } };
