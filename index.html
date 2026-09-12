@@ -492,50 +492,33 @@
 
     const greetings = { "你好":"你好呀！有什么想问我的？","嗨":"嗨！我在~","在吗":"在的~","谢谢":"不客气！","谢了":"不客气！","嗯":"嗯嗯~","好的":"好的~","ok":"好的~","嗯嗯":"嗯嗯~" };
 
-    // 同义词扩展检索
-    const synonyms = {
-      "这周":["周","日程","安排","计划","本周"],"周一":["周一"],"周二":["周二"],"周三":["周三","牙医"],"周四":["周四"],"周五":["周五","产品","评审"],"周六":["周六"],"周日":["周日","整理"],
-      "今天":["日程","安排"],"明天":["日程","安排"],"本周":["周","日程","牙医"],
-      "提醒":["日程","安排","计划"],"注意":["日程","安排"],"日程":["安排","计划","牙医","评审"],"安排":["日程","计划","牙医","评审","整理"],"计划":["日程","安排"],"待办":["日程","安排"],
-      "吃":["饮食","喜好","香菜","花生","过敏","清淡","燕麦"],"喝":["饮食","喜好","燕麦","牛奶"],"食物":["饮食","香菜","花生"],"餐":["饮食","早餐","中餐"],"早餐":["饮食","燕麦","牛奶"],"口味":["饮食","清淡","香菜"],"过敏":["饮食","花生","过敏"],"忌口":["饮食","香菜","花生"],"偏好":["喜好","偏好","喜欢"],
-      "身高":["基本信息","身高","175"],"体重":["基本信息","体重","68"],"身体":["基本信息","身高","体重","血型"],"血型":["基本信息","血型"],"健康":["基本信息","过敏","血型"],
-      "姨妈":["生理","经期","周期"],"生理期":["生理","经期","周期","姨妈"],"经期":["生理","经期","周期"],"月经":["生理","经期"],
-      "作息":["作息","睡觉","起床","午休"],"睡觉":["作息","睡","起床"],"起床":["作息","起床"],"几点睡":["作息","睡","23"],"几点起":["作息","起床","7"],
-      "喜欢":["喜好","偏好"],"不喜欢":["喜好","不喜欢","香菜"],"爱好":["喜好","偏好"],"习惯":["喜好","习惯","作息"],"运动":["喜好","运动"],"兴趣":["喜好","兴趣"],
-      "资料":["信息","喜好","日程"],"信息":["信息","基本信息"],"所有":["信息","喜好","日程"],"整理":["信息","喜好","日程"],"总结":["信息","喜好","日程"],
-      "现在":["体重","身高","血型","最新"],"目前":["体重","身高","血型","最新"],"多重":["体重","斤","kg"],"多少斤":["体重","斤"],"多重":["体重"]
-    };
-
-    function scoreSim(q, e) {
-      const t = (e.title + e.body + (CAT[e.cat]?.name || "")).toLowerCase();
-      const chars = [...new Set(q.replace(/\s/g, ""))];
-      let h = 0; chars.forEach(ch => { if (t.includes(ch)) h++; });
-      let score = chars.length ? h / chars.length : 0;
-      Object.entries(synonyms).forEach(([key, words]) => { if (q.includes(key)) words.forEach(w => { if (t.includes(w)) score += 0.15; }); });
-      return Math.min(score, 1);
-    }
-
+    // 简单检索（不用同义词，Qwen自己判断）
     function retrieve(q) {
+      const chars = [...new Set(q.replace(/\s/g, ""))];
       return entries.filter(e => e.status === "ready")
-        .map(e => ({ e, score: scoreSim(q, e) }))
-        .filter(x => x.score >= 0.15)
+        .map(e => {
+          const t = (e.title + e.body).toLowerCase();
+          const hits = chars.filter(c => t.includes(c)).length;
+          return { e, score: chars.length ? hits / chars.length : 0 };
+        })
+        .filter(x => x.score > 0)
         .sort((a, b) => b.score - a.score)
-        .slice(0, 2);
+        .slice(0, 5);
     }
 
-    // 构建 RAG Prompt（真实 Prompt，打包后给 Qwen）
+    // 构建 RAG Prompt（真实Prompt，打包后给Qwen）
     function buildRagPrompt(q, hits) {
-      const data = hits.map(h => `【${h.e.title}】\n${h.e.body}`).join("\n\n");
+      const data = hits.map((h, i) => `[资料${i+1}] 创建时间：${h.e.updated}\n${h.e.title}：${h.e.body}`).join("\n\n");
       return `你是用户的专属离线私人助手贝贝。根据下方【个人知识库】回答用户问题。
 
-规则：
-1. 只使用知识库里的信息回答，禁止编造
-2. 回答要简洁，只提取相关内容，不要重复所有资料
-3. 如果问"这个月/上个月"，根据当前日期判断并筛选对应记录
-4. 语气温柔关心，像朋友一样
-5. 如果知识库没有相关信息，友好提示"我还不知道这个，要告诉我吗？"
+当前日期：${new Date().toLocaleDateString('zh-CN')} ${new Date().toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'})}
 
-当前日期：${new Date().toLocaleDateString('zh-CN')}
+规则：
+1. 只使用知识库里的信息，禁止编造
+2. 如果有多条相关记录，返回最新的那条
+3. 只提取问题问到的部分，不要输出整段资料
+4. 如果问"这个月/上个月"，根据当前日期判断
+5. 如果知识库没有相关信息，只说"暂无记录"
 
 【个人知识库】
 ${data}
@@ -543,12 +526,11 @@ ${data}
 用户问题：${q}`;
     }
 
-    // Mock LLM（模拟 Qwen 行为：只提取相关内容）
-    function mockLlmResponse(q, hits) {
+    // Mock LLM（模拟Qwen行为：从Prompt里提取回答）
+    function mockLlmResponse(prompt, q, hits) {
       const now = new Date();
       const currentMonth = now.getMonth() + 1;
       const lastMonth = currentMonth === 1 ? 12 : currentMonth - 1;
-      const allBody = hits.map(h => h.e.body).join(" ");
 
       // 时间过滤
       if (/这个月|本月/.test(q)) {
@@ -560,36 +542,32 @@ ${data}
         if (filtered.length) return filtered.map(h => h.e.body).join("\n");
       }
 
-      // 精确提取：只返回问到的部分
-      // 精确提取：返回最新记录
+      // 提取：返回最新匹配值（Qwen会自己判断）
       if (/体重|多重/.test(q)) {
         const matches = hits.map(h => h.e.body.match(/(\d+)\s*(kg|斤|公斤)/i)).filter(Boolean);
         return matches.length ? matches[matches.length - 1][0] : "暂无记录";
       }
-      if (/身高/.test(q)) { const m = allBody.match(/(\d+)\s*(cm|厘米|米)/i); return m ? m[0] : "暂无记录"; }
-      if (/血型/.test(q)) { const m = allBody.match(/[ABOab][型Bb]?/i); return m ? m[0] : "暂无记录"; }
-      if (/过敏|忌口/.test(q)) { const m = allBody.match(/.*过敏.*/); return m ? m[0] : "暂无记录"; }
-      if (/不吃|忌口|不喜欢/.test(q)) { const m = allBody.match(/不吃.*/); return m ? m[0] : "暂无记录"; }
-      if (/早餐/.test(q)) { const m = allBody.match(/早餐.*/); return m ? m[0] : "暂无记录"; }
-      if (/几点睡|睡觉/.test(q)) { const m = allBody.match(/\d+[:\：]\d+.*睡/); return m ? m[0] : "暂无记录"; }
-      if (/几点起|起床/.test(q)) { const m = allBody.match(/\d+[:\：]\d+.*起/); return m ? m[0] : "暂无记录"; }
+      if (/身高/.test(q)) { const m = hits.map(h => h.e.body.match(/(\d+)\s*(cm|厘米|米)/i)).filter(Boolean); return m.length ? m[m.length-1][0] : "暂无记录"; }
+      if (/血型/.test(q)) { const m = hits.map(h => h.e.body.match(/[ABOab][型Bb]?/i)).filter(Boolean); return m.length ? m[m.length-1][0] : "暂无记录"; }
+      if (/过敏/.test(q)) { return hits.filter(h => h.e.body.includes("过敏")).map(h => h.e.body).join("\n") || "暂无记录"; }
+      if (/不吃/.test(q)) { return hits.filter(h => h.e.body.includes("不吃")).map(h => h.e.body).join("\n") || "暂无记录"; }
 
-      // 日程提醒
-      if (/提醒|注意|别忘|安排|日程|周[一二三四五六日]/.test(q)) {
+      // 日程
+      if (/提醒|安排|日程|周[一二三四五六日]/.test(q)) {
         const schedule = hits.filter(h => h.e.cat === "plan");
         if (schedule.length) return schedule.map(h => h.e.body).join("\n");
       }
 
-      // 饮食推荐
-      if (/吃|喝|餐|食|推荐|口味/.test(q)) {
+      // 饮食
+      if (/吃|喝|餐|食/.test(q)) {
         const likes = hits.filter(h => h.e.cat === "like");
-        if (likes.length) return likes.map(h => h.e.body).join("\n") + "\n\n今晚可以考虑清淡的中餐~";
+        if (likes.length) return likes.map(h => h.e.body).join("\n");
       }
 
-      // 摘要/整理
-      if (/摘要|整理|汇总|总结/.test(q)) return hits.map(h => `${h.e.title}：${h.e.body}`).join("\n");
+      // 摘要
+      if (/整理|汇总|总结/.test(q)) return hits.map(h => `${h.e.title}：${h.e.body}`).join("\n");
 
-      // 默认
+      // 默认返回全部
       return hits.map(h => h.e.body).join("\n");
     }
 
@@ -621,11 +599,9 @@ ${data}
         } else {
           const hits = retrieve(q);
           if (hits.length) {
-            // 构建 Prompt（真实App会发给 Qwen）
             const prompt = buildRagPrompt(q, hits);
             console.log("RAG Prompt:", prompt);
-            // Mock LLM 回答（真实App替换为: const answer = await llm.generate(prompt)）
-            answer = mockLlmResponse(q, hits);
+            answer = mockLlmResponse(prompt, q, hits);
           } else {
             const guide = guidePrompt(q);
             answer = guide.text;
