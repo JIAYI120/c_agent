@@ -959,11 +959,9 @@
 
     // 从资料body中提取匹配片段
     function extractRelevant(q, body) {
-      // 按分号/句号/换行拆分
       const parts = body.split(/[；;。\n]/).filter(s => s.trim());
       if (parts.length <= 1) return body;
 
-      // 提取问题中的关键词
       const keywords = Object.keys(synonyms).filter(k => q.includes(k));
       keywords.push(...q.replace(/[？?！!。，,.]/g, "").split("").filter(c => c.length));
 
