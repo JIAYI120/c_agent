@@ -1014,8 +1014,37 @@
         case "remind": {
           const schedule = hits.filter(h => h.e.cat === "plan");
           const items = schedule.length ? schedule : hits;
-          if (items.length) {
-            const lines = items.map(h => extractRelevant(q, h.e.body));
+
+          // 时间过滤：这个月/上个月
+          const now = new Date();
+          const monthMap = {
+            "这个月": now.getMonth() + 1,
+            "本月": now.getMonth() + 1,
+            "上个月": now.getMonth() === 0 ? 12 : now.getMonth(),
+            "下个月": now.getMonth() === 11 ? 1 : now.getMonth() + 2,
+          };
+          let targetMonth = null;
+          Object.entries(monthMap).forEach(([key, month]) => {
+            if (q.includes(key)) targetMonth = month;
+          });
+
+          let filtered = items;
+          if (targetMonth) {
+            filtered = items.filter(h => {
+              const body = h.e.body;
+              return body.includes(`${targetMonth}月`) || body.includes(`${targetMonth}日`);
+            });
+            // 如果没找到，用extractRelevant兜底
+            if (!filtered.length) {
+              filtered = items.map(h => ({
+                ...h,
+                e: { ...h.e, body: extractRelevant(q, h.e.body) }
+              })).filter(h => h.e.body !== items[0]?.e.body);
+            }
+          }
+
+          if (filtered.length) {
+            const lines = filtered.map(h => extractRelevant(q, h.e.body));
             return { text: lines.join("\n"), guide: null };
           }
           return { text: `暂时没有安排，要添加日程吗？`, guide: { cat: "plan", title: "新日程", text: "" } };
