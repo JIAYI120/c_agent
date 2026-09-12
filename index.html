@@ -422,7 +422,7 @@
   </div>
   <script>
     const CAT = { info: { name: "信息" }, like: { name: "喜好" }, plan: { name: "日程" }, other: { name: "其它" } };
-    const now = new Date();
+    const now = new Date('2025-09-12T14:30:00');
     const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
     const seed = [
       { id: 1, title: "基本信息", cat: "info", body: "身高 175cm，血型 O。目标是保持体脂稳定，优先规律作息。", status: "ready", updated: fmt(now) },
@@ -513,7 +513,7 @@
       const data = hits.map((h, i) => `[资料${i+1}] 创建时间：${h.e.updated}\n${h.e.title}：${h.e.body}`).join("\n\n");
       return `你是用户的专属离线私人助手贝贝。根据下方【个人知识库】回答用户问题。
 
-当前日期：${new Date().toLocaleDateString('zh-CN')} ${new Date().toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'})}
+当前日期：2025-09-12 14:30（周五）
 
 规则：
 1. 只使用知识库里的信息，禁止编造
