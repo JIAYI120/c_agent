@@ -104,7 +104,7 @@ class _MainScreenState extends State<MainScreen> {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL,
             body TEXT NOT NULL,
-            category TEXT NOT NULL,
+            category TEXT NOT NULL DEFAULT 'info',
             content_hash TEXT,
             embedding_status TEXT DEFAULT 'pending',
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
@@ -222,6 +222,21 @@ class _MainScreenState extends State<MainScreen> {
       ),
     );
   }
+
+  Widget _tabIcon(int index, IconData icon) {
+    final active = _currentIndex == index;
+    return GestureDetector(
+      onTap: () => setState(() => _currentIndex = index),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        decoration: BoxDecoration(
+          color: active ? const Color(0xFF0a84ff).withOpacity(0.10) : Colors.transparent,
+          borderRadius: BorderRadius.circular(30),
+        ),
+        child: Icon(icon, size: 22, color: active ? const Color(0xFF0a84ff) : Colors.white.withOpacity(0.3)),
+      ),
+    );
+  }
 }
 
 class EntriesScreen extends StatefulWidget {
@@ -235,7 +250,7 @@ class EntriesScreen extends StatefulWidget {
 
 class _EntriesScreenState extends State<EntriesScreen> {
   List<Map<String, dynamic>> _entries = [];
-  String _filter = 'all';
+  String _filter = 'info';
 
   @override
   void initState() {
@@ -257,15 +272,13 @@ class _EntriesScreenState extends State<EntriesScreen> {
   }
 
   List<Map<String, dynamic>> get _filtered =>
-      _filter == 'all' ? _entries : _entries.where((e) => e['category'] == _filter).toList();
+      _entries.where((e) => e['category'] == _filter).toList();
 
   final Map<String, Map<String, dynamic>> _catMeta = {
-    'profile': {'name': '档案', 'icon': Icons.horizontal_rule, 'color': const Color(0xFF0a84ff)},
-    'period': {'name': '姨妈', 'icon': Icons.circle_outlined, 'color': const Color(0xFFff453a)},
-    'schedule': {'name': '日程', 'icon': Icons.crop_square_rounded, 'color': const Color(0xFFff9f0a)},
-    'preference': {'name': '偏好', 'icon': Icons.diamond_outlined, 'color': const Color(0xFF30d158)},
-    'note': {'name': '笔记', 'icon': Icons.change_history_outlined, 'color': const Color(0xFFbf5af2)},
-    'other': {'name': '其他', 'icon': Icons.circle, 'color': const Color(0xFFbf5af2)},
+    'info': {'name': '信息', 'icon': Icons.horizontal_rule, 'color': const Color(0xFF0a84ff)},
+    'like': {'name': '喜好', 'icon': Icons.diamond_outlined, 'color': const Color(0xFF30d158)},
+    'plan': {'name': '日程', 'icon': Icons.crop_square_rounded, 'color': const Color(0xFFff9f0a)},
+    'other': {'name': '其它', 'icon': Icons.circle, 'color': const Color(0xFFbf5af2)},
   };
 
   @override
@@ -283,19 +296,18 @@ class _EntriesScreenState extends State<EntriesScreen> {
             ],
           ),
         ),
-        // Filters
-        SizedBox(
-          height: 36,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+        // Filters - equal width 4 columns
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
             children: [
-              _filterChip('全部', 'all'),
-              _filterChip('档案', 'profile'),
-              _filterChip('姨妈', 'period'),
-              _filterChip('日程', 'schedule'),
-              _filterChip('偏好', 'preference'),
-              _filterChip('笔记', 'note'),
+              Expanded(child: _filterChip('信息', 'info')),
+              const SizedBox(width: 8),
+              Expanded(child: _filterChip('喜好', 'like')),
+              const SizedBox(width: 8),
+              Expanded(child: _filterChip('日程', 'plan')),
+              const SizedBox(width: 8),
+              Expanded(child: _filterChip('其它', 'other')),
             ],
           ),
         ),
@@ -331,21 +343,18 @@ class _EntriesScreenState extends State<EntriesScreen> {
 
   Widget _filterChip(String label, String value) {
     final selected = _filter == value;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: ChoiceChip(
-        label: Text(label),
-        selected: selected,
-        onSelected: (_) => setState(() => _filter = value),
-        selectedColor: const Color(0xFF0a84ff),
-        backgroundColor: const Color(0xFF2c2c2e),
-        labelStyle: TextStyle(
-          color: selected ? Colors.white : Colors.white.withOpacity(0.6),
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) => setState(() => _filter = value),
+      selectedColor: const Color(0xFF0a84ff),
+      backgroundColor: const Color(0xFF2c2c2e),
+      labelStyle: TextStyle(
+        color: selected ? Colors.white : Colors.white.withOpacity(0.6),
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
       ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
     );
   }
 
@@ -445,7 +454,7 @@ class _EntryFormScreenState extends State<EntryFormScreen> {
     super.initState();
     _titleCtrl = TextEditingController(text: widget.entry?['title'] as String? ?? '');
     _bodyCtrl = TextEditingController(text: widget.entry?['body'] as String? ?? '');
-    _category = widget.entry?['category'] as String? ?? 'profile';
+    _category = widget.entry?['category'] as String? ?? 'info';
   }
 
   @override
@@ -524,11 +533,10 @@ class _EntryFormScreenState extends State<EntryFormScreen> {
 
   Widget _categoryPicker() {
     final cats = [
-      {'key': 'profile', 'name': '档案'},
-      {'key': 'period', 'name': '姨妈'},
-      {'key': 'schedule', 'name': '日程'},
-      {'key': 'preference', 'name': '偏好'},
-      {'key': 'note', 'name': '笔记'},
+      {'key': 'info', 'name': '信息'},
+      {'key': 'like', 'name': '喜好'},
+      {'key': 'plan', 'name': '日程'},
+      {'key': 'other', 'name': '其它'},
     ];
     return Wrap(
       spacing: 8,

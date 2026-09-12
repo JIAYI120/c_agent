@@ -188,20 +188,20 @@
       display: flex;
       gap: 8px;
       padding: 0 16px 14px;
-      overflow-x: auto;
     }
     .fchip {
-      flex: 0 0 auto;
+      flex: 1;
       border: none;
       background: rgba(255,255,255,0.05);
       color: var(--text2);
       border-radius: 20px;
-      padding: 8px 18px;
+      padding: 8px 0;
       font-size: 14px;
       font-weight: 500;
       cursor: pointer;
       font-family: inherit;
       transition: all 0.2s ease;
+      text-align: center;
     }
     .fchip.on {
       background: var(--accent);
@@ -232,10 +232,10 @@
       margin-right: 14px;
       flex-shrink: 0;
     }
-    .row-item .icon-wrap.profile { background: rgba(10,132,255,0.10); }
-    .row-item .icon-wrap.period  { background: rgba(255,69,58,0.10); }
-    .row-item .icon-wrap.schedule { background: rgba(255,159,10,0.10); }
-    .row-item .icon-wrap.preference { background: rgba(48,209,88,0.10); }
+    .row-item .icon-wrap.info { background: rgba(10,132,255,0.10); }
+    .row-item .icon-wrap.like { background: rgba(48,209,88,0.10); }
+    .row-item .icon-wrap.plan { background: rgba(255,159,10,0.10); }
+    .row-item .icon-wrap.other { background: rgba(191,90,242,0.10); }
     .row-item .icon-wrap.note { background: rgba(191,90,242,0.10); }
     .row-item .body { flex: 1; min-width: 0; }
     .row-item .title { font-size: 17px; margin: 0 0 3px; }
@@ -332,44 +332,6 @@
       transition: all 0.12s;
     }
     .sug:active { background: rgba(255,255,255,0.07); }
-
-    /* ── Composer (glass) ── */
-    .composer {
-      flex: 0 0 auto;
-      display: flex;
-      gap: 10px;
-      padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
-      background: var(--glass);
-      backdrop-filter: blur(50px) saturate(200%);
-      border-top: 0.5px solid var(--sep);
-    }
-    .composer input {
-      flex: 1;
-      background: rgba(255,255,255,0.05);
-      border: 0.5px solid rgba(255,255,255,0.08);
-      border-radius: 22px;
-      color: var(--text);
-      padding: 12px 18px;
-      font-size: 16px;
-      font-family: inherit;
-      outline: none;
-    }
-    .composer input:focus {
-      background: rgba(255,255,255,0.07);
-      border-color: rgba(10,132,255,0.25);
-    }
-    .send {
-      width: 44px; height: 44px;
-      border-radius: 22px; border: none;
-      background: var(--accent);
-      color: #fff;
-      font-size: 18px;
-      cursor: pointer;
-      box-shadow: 0 2px 10px rgba(10,132,255,0.30);
-      transition: all 0.12s;
-    }
-    .send:disabled { opacity: 0.25; box-shadow: none; }
-    .send:active:not(:disabled) { transform: scale(0.9); }
 
     /* ── Sheet ── */
     .sheet-backdrop {
@@ -493,8 +455,9 @@
       bottom: 0; left: 0; right: 0;
       z-index: 10;
       display: flex;
-      justify-content: center;
-      padding: 0 24px 18px;
+      align-items: center;
+      padding: 0 16px 18px;
+      gap: 8px;
       pointer-events: none;
     }
     .tabbar {
@@ -504,7 +467,7 @@
       backdrop-filter: blur(60px) saturate(220%);
       -webkit-backdrop-filter: blur(60px) saturate(220%);
       border-radius: var(--r-pill);
-      padding: 8px 12px;
+      padding: 8px 10px;
       border: 0.5px solid rgba(255,255,255,0.10);
       box-shadow:
         0 8px 32px rgba(0,0,0,0.35),
@@ -512,44 +475,97 @@
         inset 0 1px 0 rgba(255,255,255,0.07);
       pointer-events: auto;
       position: relative;
+      flex-shrink: 0;
     }
-    /* Refraction highlight */
     .tabbar::before {
       content: "";
       position: absolute;
-      top: 0; left: 20px; right: 20px;
+      top: 0; left: 12px; right: 12px;
       height: 1px;
       background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
       border-radius: 1px;
     }
     .tabbar .tab {
-      flex: 1;
       border: none;
       background: transparent;
       color: var(--text3);
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 8px 20px;
-      font-size: 0;
+      padding: 8px 16px;
       cursor: pointer;
       font-family: inherit;
       border-radius: 30px;
       transition: all 0.25s ease;
-      position: relative;
     }
-    .tabbar .tab svg {
-      width: 22px; height: 22px;
-      stroke-width: 1.8;
-    }
+    .tabbar .tab svg { width: 20px; height: 20px; }
     .tabbar .tab.active {
       color: var(--accent);
       background: rgba(10,132,255,0.10);
-      box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.04);
     }
 
-    /* Leave room for floating tab bar */
-    .screen { padding-bottom: 100px; }
+    /* ── Chat input islands ── */
+    .chat-islands {
+      flex: 1;
+      display: flex;
+      gap: 8px;
+      pointer-events: auto;
+    }
+    .chat-islands.hidden { display: none; }
+    .input-island {
+      flex: 1;
+      background: rgba(28,28,30,0.55);
+      backdrop-filter: blur(60px) saturate(220%);
+      -webkit-backdrop-filter: blur(60px) saturate(220%);
+      border-radius: var(--r-pill);
+      border: 0.5px solid rgba(255,255,255,0.10);
+      box-shadow:
+        0 8px 32px rgba(0,0,0,0.35),
+        0 2px 8px rgba(0,0,0,0.20),
+        inset 0 1px 0 rgba(255,255,255,0.07);
+      position: relative;
+    }
+    .input-island::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 12px; right: 12px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+    }
+    .input-island input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      padding: 12px 18px;
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      border-radius: var(--r-pill);
+    }
+    .input-island input::placeholder { color: var(--text3); }
+    .send-island {
+      width: 44px; height: 44px;
+      border-radius: 22px;
+      border: none;
+      background: rgba(28,28,30,0.55);
+      backdrop-filter: blur(60px) saturate(220%);
+      -webkit-backdrop-filter: blur(60px) saturate(220%);
+      color: var(--accent);
+      font-size: 18px;
+      cursor: pointer;
+      box-shadow:
+        0 8px 32px rgba(0,0,0,0.35),
+        0 2px 8px rgba(0,0,0,0.20),
+        inset 0 1px 0 rgba(255,255,255,0.07);
+      border: 0.5px solid rgba(255,255,255,0.10);
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    .send-island:active { transform: scale(0.9); background: rgba(10,132,255,0.15); }
+
+    /* Leave room for floating island bar */
+    .screen { padding-bottom: 90px; }
   </style>
 </head>
 <body>
@@ -577,12 +593,10 @@
           <div class="stat-card glass"><div class="n" id="statReady">3</div><div class="l">已向量</div></div>
         </div>
         <div class="filters" id="filters">
-          <button class="fchip on" data-cat="all">全部</button>
-          <button class="fchip" data-cat="profile">档案</button>
-          <button class="fchip" data-cat="period">姨妈</button>
-          <button class="fchip" data-cat="schedule">日程</button>
-          <button class="fchip" data-cat="preference">偏好</button>
-          <button class="fchip" data-cat="note">笔记</button>
+          <button class="fchip on" data-cat="info">信息</button>
+          <button class="fchip" data-cat="like">喜好</button>
+          <button class="fchip" data-cat="plan">日程</button>
+          <button class="fchip" data-cat="other">其它</button>
         </div>
         <div id="entryList"></div>
       </section>
@@ -596,23 +610,25 @@
             <button class="sug" data-q="生理期大概什么时候？">生理期</button>
           </div>
           <div class="chat-log" id="chatLog"></div>
-          <div class="composer">
-            <input id="chatInput" type="text" placeholder="根据我的资料回答…" autocomplete="off" />
-            <button class="send" id="chatSend">↑</button>
-          </div>
         </div>
       </section>
     </main>
 
-    <!-- Liquid Glass Tab Bar -->
+    <!-- Bottom island bar -->
     <div class="tabbar-wrap">
       <div class="tabbar">
         <button class="tab active" data-screen="entries">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 8h8M8 12h6M8 16h4"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 8h8M8 12h6M8 16h4"/></svg>
         </button>
         <button class="tab" data-screen="chat">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 01-3.68-.71L3 21l1.71-4.04C3.63 15.58 3 13.85 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 01-3.68-.71L3 21l1.71-4.04C3.63 15.58 3 13.85 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
         </button>
+      </div>
+      <div class="chat-islands hidden" id="chatIslands">
+        <div class="input-island">
+          <input id="chatInput" type="text" placeholder="根据我的资料回答…" autocomplete="off" />
+        </div>
+        <button class="send-island" id="chatSend">↑</button>
       </div>
     </div>
 
@@ -629,12 +645,10 @@
         <input class="f" id="fTitle" placeholder="输入标题" maxlength="40" />
         <label class="field">分类</label>
         <select class="f" id="fCat">
-          <option value="profile">档案</option>
-          <option value="period">姨妈</option>
-          <option value="schedule">日程</option>
-          <option value="preference">偏好</option>
-          <option value="note">笔记</option>
-          <option value="other">其他</option>
+          <option value="info">信息</option>
+          <option value="like">喜好</option>
+          <option value="plan">日程</option>
+          <option value="other">其它</option>
         </select>
         <label class="field">内容</label>
         <textarea class="f" id="fBody" placeholder="写下你想记住的…" maxlength="20000"></textarea>
@@ -646,23 +660,21 @@
 
   <script>
     const CAT = {
-      profile: { name: "档案", icon: "—", cls: "profile" },
-      period:  { name: "姨妈", icon: "○", cls: "period" },
-      schedule: { name: "日程", icon: "□", cls: "schedule" },
-      preference: { name: "偏好", icon: "◇", cls: "preference" },
-      note: { name: "笔记", icon: "△", cls: "note" },
-      other: { name: "其他", icon: "·", cls: "note" }
+      info: { name: "信息", icon: "—", cls: "profile" },
+      like: { name: "喜好", icon: "◇", cls: "preference" },
+      plan: { name: "日程", icon: "□", cls: "schedule" },
+      other: { name: "其它", icon: "·", cls: "note" }
     };
 
     const seed = [
-      { id: 1, title: "基本信息", cat: "profile", body: "身高 175cm，体重 68kg，血型 O。目标是保持体脂稳定，优先规律作息。", status: "ready", updated: "今天" },
-      { id: 2, title: "饮食偏好", cat: "preference", body: "不吃香菜。偏好清淡中餐，早餐常喝燕麦牛奶。对花生过敏。", status: "ready", updated: "昨天" },
-      { id: 3, title: "本周日程", cat: "schedule", body: "周三 19:30 牙医复诊；周五下午产品评审；周日想整理房间。", status: "ready", updated: "周一" },
-      { id: 4, title: "生理期记录", cat: "period", body: "最近一次开始：本月 3 日，周期约 28 天，经期 5 天左右。", status: "pending", updated: "刚刚" }
+      { id: 1, title: "基本信息", cat: "info", body: "身高 175cm，体重 68kg，血型 O。目标是保持体脂稳定，优先规律作息。", status: "ready", updated: "今天" },
+      { id: 2, title: "饮食喜好", cat: "like", body: "不吃香菜。偏好清淡中餐，早餐常喝燕麦牛奶。对花生过敏。", status: "ready", updated: "昨天" },
+      { id: 3, title: "本周日程", cat: "plan", body: "周三 19:30 牙医复诊；周五下午产品评审；周日想整理房间。", status: "ready", updated: "周一" },
+      { id: 4, title: "生理期记录", cat: "info", body: "最近一次开始：本月 3 日，周期约 28 天，经期 5 天左右。", status: "pending", updated: "刚刚" }
     ];
 
     let entries = [...seed];
-    let filter = "all";
+    let filter = "info";
     let editingId = null;
     const $ = s => document.querySelector(s);
     const $$ = s => [...document.querySelectorAll(s)];
@@ -684,7 +696,7 @@
     clock(); setInterval(clock, 30000);
 
     function renderEntries() {
-      const list = filter === "all" ? entries : entries.filter(e => e.cat === filter);
+      const list = entries.filter(e => e.cat === filter);
       $("#statCount").textContent = entries.length;
       $("#statReady").textContent = entries.filter(e => e.status === "ready").length;
       const box = $("#entryList");
@@ -734,7 +746,7 @@
       } else {
         $("#sheetTitle").textContent = "新建资料";
         $("#fTitle").value = "";
-        $("#fCat").value = "profile";
+        $("#fCat").value = "info";
         $("#fBody").value = "";
       }
       $("#sheetBd").classList.add("open");
@@ -794,6 +806,8 @@
         $("#pageTitle").textContent = meta[id].t;
         $("#pageSub").textContent = meta[id].s;
         $("#fabAdd").style.display = id === "entries" ? "block" : "none";
+        // Show/hide chat input islands
+        $("#chatIslands").classList.toggle("hidden", id !== "chat");
       });
     });
 
