@@ -597,7 +597,7 @@ ${data}
       const typing = addBubble("bot", '<span class="typing"><i></i><i></i><i></i></span>');
       $("#chatSend").disabled = true;
       setTimeout(() => {
-        let answer = "", guideHtml = "";
+        let answer = "", guideHtml = "", refsHtml = "";
         const lowerQ = q.toLowerCase();
         if (greetings[lowerQ]) {
           answer = greetings[lowerQ];
@@ -607,13 +607,17 @@ ${data}
             const prompt = buildRagPrompt(q, hits);
             console.log("RAG Prompt:", prompt);
             answer = mockLlmResponse(prompt, q, hits);
+            // 生成引用标签
+            refsHtml = '<div class="refs">' + hits.map(h =>
+              `<div class="ref" data-ref="${h.e.id}">📎 ${esc(h.e.title)} · ${esc(h.e.updated)}</div>`
+            ).join("") + '</div>';
           } else {
             const guide = guidePrompt(q);
             answer = guide.text;
             guideHtml = `<button class="guide-btn" data-cat="${guide.cat}" data-title="${esc(guide.title)}">＋ 添加资料</button>`;
           }
         }
-        typing.innerHTML = esc(answer).replace(/\n/g, "<br/>") + guideHtml;
+        typing.innerHTML = esc(answer).replace(/\n/g, "<br/>") + refsHtml + guideHtml;
         typing.querySelectorAll(".guide-btn").forEach(btn => {
           btn.addEventListener("click", () => { openSheet(null); $("#fCat").value = btn.dataset.cat; $("#fTitle").value = btn.dataset.title; });
         });
