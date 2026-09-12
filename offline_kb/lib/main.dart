@@ -478,13 +478,13 @@ class _EntryFormScreenState extends State<EntryFormScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _label('标题'),
-            _input(_titleCtrl, '输入标题'),
+            _input(_titleCtrl, '输入标题', maxLength: 10),
             const SizedBox(height: 16),
             _label('分类'),
             _categoryPicker(),
             const SizedBox(height: 16),
             _label('内容'),
-            _input(_bodyCtrl, '写下你想记住的…', maxLines: null, minLines: 6),
+            _input(_bodyCtrl, '写下你想记住的…', maxLines: null, minLines: 6, maxLength: 50),
           ],
         ),
       ),
@@ -499,11 +499,12 @@ class _EntryFormScreenState extends State<EntryFormScreen> {
     );
   }
 
-  Widget _input(TextEditingController ctrl, String hint, {int? maxLines, int minLines = 1}) {
+  Widget _input(TextEditingController ctrl, String hint, {int? maxLines, int minLines = 1, int? maxLength}) {
     return TextField(
       controller: ctrl,
       maxLines: maxLines,
       minLines: minLines,
+      maxLength: maxLength,
       style: const TextStyle(fontSize: 16, color: Colors.white),
       decoration: InputDecoration(
         hintText: hint,

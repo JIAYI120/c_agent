@@ -368,7 +368,7 @@
     .sheet-body { padding: 20px 24px; }
     label.field { display: block; font-size: 12px; font-weight: 600; color: var(--text3); margin: 20px 0 8px; text-transform: uppercase; letter-spacing: 0.06em; }
     label.field:first-child { margin-top: 0; }
-    input.f, textarea.f, select.f {
+    input.f, textarea.f {
       width: 100%;
       background: rgba(255,255,255,0.05);
       border: 0.5px solid rgba(255,255,255,0.08);
@@ -377,6 +377,27 @@
     }
     input.f:focus, textarea.f:focus { background: rgba(10,132,255,0.06); border-color: rgba(10,132,255,0.25); }
     textarea.f { min-height: 120px; resize: vertical; line-height: 1.5; }
+    .cat-buttons {
+      display: flex;
+      gap: 8px;
+    }
+    .cat-btn {
+      flex: 1;
+      border: none;
+      background: rgba(255,255,255,0.05);
+      color: var(--text2);
+      border-radius: 20px;
+      padding: 10px 0;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      text-align: center;
+    }
+    .cat-btn.on {
+      background: var(--accent);
+      color: #fff;
+    }
     .tabbar-wrap {
       position: absolute; bottom: 0; left: 0; right: 0;
       z-index: 10; display: flex; align-items: center;
@@ -494,16 +515,16 @@
       </div>
       <div class="sheet-body">
         <label class="field">标题</label>
-        <input class="f" id="fTitle" placeholder="输入标题" maxlength="40" />
+        <input class="f" id="fTitle" placeholder="输入标题" maxlength="10" />
         <label class="field">分类</label>
-        <select class="f" id="fCat">
-          <option value="info">信息</option>
-          <option value="like">喜好</option>
-          <option value="plan">日程</option>
-          <option value="other">其它</option>
-        </select>
+        <div class="cat-buttons" id="catButtons">
+          <button class="cat-btn on" data-cat="info">信息</button>
+          <button class="cat-btn" data-cat="like">喜好</button>
+          <button class="cat-btn" data-cat="plan">日程</button>
+          <button class="cat-btn" data-cat="other">其它</button>
+        </div>
         <label class="field">内容</label>
-        <textarea class="f" id="fBody" placeholder="写下你想记住的…" maxlength="20000"></textarea>
+        <textarea class="f" id="fBody" placeholder="写下你想记住的…" maxlength="50"></textarea>
       </div>
     </div>
     <div id="toast"></div>
@@ -574,9 +595,23 @@
     function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
     function openSheet(id) {
       editingId = id || null;
-      if (id) { const e = entries.find(x => x.id === id); if (!e) return; $("#sheetTitle").textContent = "编辑"; $("#fTitle").value = e.title; $("#fCat").value = e.cat; $("#fBody").value = e.body; }
-      else { $("#sheetTitle").textContent = "新建资料"; $("#fTitle").value = ""; $("#fCat").value = "info"; $("#fBody").value = ""; }
-      $("#sheetBd").classList.add("open"); requestAnimationFrame(() => $("#sheet").classList.add("open"));
+      if (id) {
+        const e = entries.find(x => x.id === id);
+        if (!e) return;
+        $("#sheetTitle").textContent = "编辑";
+        $("#fTitle").value = e.title;
+        $("#fBody").value = e.body;
+        // 设置分类按钮
+        $$(".cat-btn").forEach(btn => btn.classList.toggle("on", btn.dataset.cat === e.cat));
+      } else {
+        $("#sheetTitle").textContent = "新建资料";
+        $("#fTitle").value = "";
+        $("#fBody").value = "";
+        // 默认选中信息
+        $$(".cat-btn").forEach(btn => btn.classList.toggle("on", btn.dataset.cat === "info"));
+      }
+      $("#sheetBd").classList.add("open");
+      requestAnimationFrame(() => $("#sheet").classList.add("open"));
     }
     function closeSheet() {
       $("#sheet").classList.remove("open");
@@ -592,9 +627,17 @@
     $("#fabAdd").addEventListener("click", () => openSheet(null));
     $("#sheetCancel").addEventListener("click", closeSheet);
     $("#sheetBd").addEventListener("click", closeSheet);
+    // 分类按钮点击
+    $$(".cat-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        $$(".cat-btn").forEach(b => b.classList.remove("on"));
+        btn.classList.add("on");
+      });
+    });
+
     $("#sheetSave").addEventListener("click", () => {
       const title = $("#fTitle").value.trim() || "未命名";
-      const cat = $("#fCat").value;
+      const cat = $(".cat-btn.on")?.dataset.cat || "info";
       const body = $("#fBody").value.trim();
       if (!body) { toast("内容不能为空"); return; }
       const now = "刚刚";
