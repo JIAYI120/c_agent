@@ -27,6 +27,8 @@
       --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", sans-serif;
     }
     *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    * { scrollbar-width: none; -ms-overflow-style; }
+    *::-webkit-scrollbar { width: 0; height: 0; display: none; }
     html, body {
       margin: 0; padding: 0; height: 100%;
       background: var(--bg);
@@ -35,12 +37,6 @@
       overscroll-behavior: none;
       -webkit-font-smoothing: antialiased;
     }
-    html::-webkit-scrollbar, body::-webkit-scrollbar,
-    .screen::-webkit-scrollbar, .chat-log::-webkit-scrollbar,
-    .filters::-webkit-scrollbar, .sheet::-webkit-scrollbar,
-    .detail-panel::-webkit-scrollbar, #modalList::-webkit-scrollbar { display: none; }
-    html, body, .screen, .chat-log, .filters, .sheet,
-    .detail-panel, #modalList { scrollbar-width: none; -ms-overflow-style: none; }
     body {
       display: flex; align-items: center; justify-content: center;
       min-height: 100dvh;
