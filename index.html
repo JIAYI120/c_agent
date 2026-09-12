@@ -224,6 +224,92 @@
       transition: background 0.12s;
     }
     .ref:active { background: rgba(10,132,255,0.25); }
+    .ref-more {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px; height: 28px;
+      font-size: 14px;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+    .ref-more:active { background: rgba(10,132,255,0.25); }
+
+    /* 来源弹窗 */
+    .modal-overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(8px);
+      z-index: 50;
+      display: none;
+    }
+    .modal-overlay.open { display: block; }
+    .modal {
+      position: absolute;
+      left: 0; right: 0;
+      top: 8%;
+      background: var(--glass);
+      backdrop-filter: blur(60px) saturate(220%);
+      border-radius: 20px 20px 0 0;
+      border-top: 0.5px solid rgba(255,255,255,0.10);
+      padding: 0 0 20px;
+      max-height: 80%;
+      overflow-y: auto;
+      z-index: 51;
+    }
+    .modal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px 20px;
+      border-bottom: 0.5px solid var(--sep);
+      position: sticky; top: 0;
+      background: var(--glass);
+      backdrop-filter: blur(60px);
+    }
+    .modal-header h3 { margin: 0; font-size: 16px; font-weight: 600; }
+    .modal-close {
+      background: none; border: none; color: var(--accent);
+      font-size: 24px; cursor: pointer; line-height: 1;
+    }
+    .modal-item {
+      padding: 14px 20px;
+      border-bottom: 0.5px solid var(--sep);
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .modal-item:active { background: rgba(255,255,255,0.03); }
+    .modal-item .item-title { font-size: 15px; font-weight: 500; margin: 0 0 2px; }
+    .modal-item .item-date { font-size: 12px; color: var(--text3); margin: 0; }
+
+    /* 来源详情下弹 */
+    .detail-panel {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      background: var(--glass);
+      backdrop-filter: blur(60px) saturate(220%);
+      border-radius: 20px 20px 0 0;
+      border-top: 0.5px solid rgba(255,255,255,0.10);
+      padding: 0 0 calc(20px + env(safe-area-inset-bottom, 0px));
+      max-height: 50%;
+      overflow-y: auto;
+      z-index: 52;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+    }
+    .detail-panel.open { transform: translateY(0); }
+    .detail-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px 20px;
+      border-bottom: 0.5px solid var(--sep);
+      position: sticky; top: 0;
+      background: var(--glass);
+    }
+    .detail-header h4 { margin: 0; font-size: 15px; font-weight: 600; }
+    .detail-body { padding: 16px 20px; }
+    .detail-body .detail-title { font-size: 17px; font-weight: 600; margin: 0 0 8px; }
+    .detail-body .detail-content { font-size: 14px; color: var(--text2); line-height: 1.6; margin: 0; }
     .guide-btn {
       display: inline-block;
       margin-top: 10px;
@@ -419,6 +505,29 @@
       </div>
     </div>
     <div id="toast"></div>
+
+    <!-- 来源弹窗 -->
+    <div class="modal-overlay" id="modalOverlay">
+      <div class="modal" id="modal">
+        <div class="modal-header">
+          <h3>资料来源</h3>
+          <button class="modal-close" id="modalClose">×</button>
+        </div>
+        <div id="modalList"></div>
+      </div>
+    </div>
+
+    <!-- 来源详情下弹 -->
+    <div class="detail-panel" id="detailPanel">
+      <div class="detail-header">
+        <h4 id="detailTitle">详情</h4>
+        <button class="modal-close" id="detailClose">×</button>
+      </div>
+      <div class="detail-body">
+        <p class="detail-title" id="detailEntryTitle"></p>
+        <p class="detail-content" id="detailContent"></p>
+      </div>
+    </div>
   </div>
   <script>
     const CAT = { info: { name: "信息" }, like: { name: "喜好" }, plan: { name: "日程" }, other: { name: "其它" } };
@@ -608,10 +717,13 @@ ${data}
             const prompt = buildRagPrompt(q, hits);
             console.log("RAG Prompt:", prompt);
             answer = mockLlmResponse(prompt, q, hits);
-            // 生成引用标签
-            refsHtml = '<div class="refs">' + hits.map(h =>
-              `<div class="ref" data-ref="${h.e.id}">📎 ${esc(h.e.title)} · ${esc(h.e.updated)}</div>`
-            ).join("") + '</div>';
+            // 生成引用标签：只显示1条，多条显示...
+            const topHit = hits[0];
+            const dateStr = topHit.e.updated.slice(0, 10); // 只取年月日
+            refsHtml = `<div class="refs">
+              <div class="ref" data-ref="${topHit.e.id}">📎 ${esc(topHit.e.title)} · ${dateStr}</div>
+              ${hits.length > 1 ? `<div class="ref-more" data-refs='${JSON.stringify(hits.map(h => ({id:h.e.id, title:h.e.title, body:h.e.body, date:h.e.updated.slice(0,10)})))}'>...</div>` : ''}
+            </div>`;
           } else {
             const guide = guidePrompt(q);
             answer = guide.text;
@@ -629,6 +741,43 @@ ${data}
     function addBubble(role, html) { const log = $("#chatLog"); const d = document.createElement("div"); d.className = "bubble " + role; d.innerHTML = html; log.appendChild(d); log.scrollTop = log.scrollHeight; return d; }
     $("#chatSend").addEventListener("click", () => { ask($("#chatInput").value); $("#chatInput").value = ""; });
     $("#chatInput").addEventListener("keydown", e => { if (e.key === "Enter") { ask($("#chatInput").value); $("#chatInput").value = ""; } });
+
+    // 来源弹窗
+    document.addEventListener("click", (e) => {
+      // 点击 ... 打开来源列表
+      if (e.target.classList.contains("ref-more")) {
+        const refs = JSON.parse(e.target.dataset.refs);
+        const list = $("#modalList");
+        list.innerHTML = refs.map(r =>
+          `<div class="modal-item" data-id="${r.id}" data-title="${esc(r.title)}" data-body="${esc(r.body)}">
+            <p class="item-title">${esc(r.title)}</p>
+            <p class="item-date">${r.date}</p>
+          </div>`
+        ).join("");
+        $("#modalOverlay").classList.add("open");
+      }
+      // 点击来源项 → 显示详情
+      if (e.target.closest(".modal-item")) {
+        const item = e.target.closest(".modal-item");
+        $("#detailEntryTitle").textContent = item.dataset.title;
+        $("#detailContent").textContent = item.dataset.body;
+        $("#detailPanel").classList.add("open");
+      }
+    });
+    $("#modalClose").addEventListener("click", () => {
+      $("#modalOverlay").classList.remove("open");
+      $("#detailPanel").classList.remove("open");
+    });
+    $("#modalOverlay").addEventListener("click", (e) => {
+      if (e.target === e.currentTarget) {
+        $("#modalOverlay").classList.remove("open");
+        $("#detailPanel").classList.remove("open");
+      }
+    });
+    $("#detailClose").addEventListener("click", () => {
+      $("#detailPanel").classList.remove("open");
+    });
+
     renderEntries();
   </script>
 </body>
