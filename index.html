@@ -542,10 +542,13 @@ ${data}
         if (filtered.length) return filtered.map(h => h.e.body).join("\n");
       }
 
-      // 提取：返回最新匹配值（Qwen会自己判断）
+      // 提取：根据时间词返回对应记录
       if (/体重|多重/.test(q)) {
-        const matches = hits.map(h => h.e.body.match(/(\d+)\s*(kg|斤|公斤)/i)).filter(Boolean);
-        return matches.length ? matches[matches.length - 1][0] : "暂无记录";
+        const matches = hits.map(h => ({ value: h.e.body.match(/(\d+)\s*(kg|斤|公斤)/i)?.[0], time: h.e.updated })).filter(m => m.value);
+        if (!matches.length) return "暂无记录";
+        // 根据时间词选择
+        if (/上周|之前|以前|上次/.test(q)) return matches[0]?.value || "暂无记录";
+        return matches[matches.length - 1]?.value || "暂无记录"; // 默认最新
       }
       if (/身高/.test(q)) { const m = hits.map(h => h.e.body.match(/(\d+)\s*(cm|厘米|米)/i)).filter(Boolean); return m.length ? m[m.length-1][0] : "暂无记录"; }
       if (/血型/.test(q)) { const m = hits.map(h => h.e.body.match(/[ABOab][型Bb]?/i)).filter(Boolean); return m.length ? m[m.length-1][0] : "暂无记录"; }
