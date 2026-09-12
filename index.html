@@ -234,8 +234,7 @@
       background: var(--accent-soft);
       border-radius: 8px;
       cursor: pointer;
-      margin-left: 8px;
-      vertical-align: middle;
+      margin-top: 6px;
     }
     .ref-more:active { background: rgba(10,132,255,0.25); }
 
@@ -726,7 +725,8 @@ ${data}
             const topHit = sorted[0];
             const dateStr = topHit.e.updated.slice(0, 10); // 只取年月日
             refsHtml = `<div class="refs">
-              <div class="ref" data-ref="${topHit.e.id}">${esc(topHit.e.title)} · ${dateStr}${hits.length > 1 ? `<span class="ref-more" data-refs='${JSON.stringify(hits.map(h => ({id:h.e.id, title:h.e.title, body:h.e.body, date:h.e.updated.slice(0,10)})))}'>...</span>` : ''}</div>
+              <div class="ref" data-ref="${topHit.e.id}">${esc(topHit.e.title)} · ${dateStr}</div>
+              ${hits.length > 1 ? `<div class="ref-more" data-refs='${JSON.stringify(hits.map(h => ({id:h.e.id, title:h.e.title, body:h.e.body, date:h.e.updated.slice(0,10)})))}'>...</div>` : ''}
             </div>`;
           } else {
             const guide = guidePrompt(q);
