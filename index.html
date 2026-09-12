@@ -929,7 +929,7 @@
       $("#chatSend").disabled = true;
 
       setTimeout(() => {
-        let answer, refs = "";
+        let answer, refs = "", guideHtml = "";
         const lowerQ = q.toLowerCase();
 
         if (greetings[lowerQ]) {
@@ -948,11 +948,15 @@
 
           // 引导录入按钮
           if (result.guide) {
-            answer += `\n\n<button class="guide-btn" data-cat="${result.guide.cat}" data-title="${esc(result.guide.title)}">＋ 添加资料</button>`;
+            guideHtml = `<button class="guide-btn" data-cat="${result.guide.cat}" data-title="${esc(result.guide.title)}">＋ 添加资料</button>`;
           }
         }
 
         typing.innerHTML = esc(answer).replace(/\n/g, "<br/>") + refs;
+        // 追加引导按钮（不经过 esc）
+        if (guideHtml) {
+          typing.insertAdjacentHTML("beforeend", guideHtml);
+        }
         typing.querySelectorAll("[data-ref]").forEach(r => {
           r.addEventListener("click", () => {
             $$(".tab")[0].click();
