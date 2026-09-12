@@ -500,8 +500,7 @@
     .tabbar .tab.active { color: var(--accent); background: rgba(10,132,255,0.10); }
     .chat-islands { flex: 1; display: flex; gap: 8px; pointer-events: auto; }
     .chat-islands.hidden { display: none; }
-    .chat-header { display: flex; align-items: center; justify-content: space-between; padding: 0 16px 12px; }
-    .chat-header .chat-title { font-size: 14px; color: var(--text2); }
+    .chat-header { display: none; }
     .settings-btn {
       width: 32px; height: 32px;
       border-radius: 16px; border: none;
@@ -589,9 +588,6 @@
       <section class="screen" id="screen-chat">
         <div class="chat-bg" id="chatBg"></div>
         <div class="chat-wrap">
-          <div class="chat-header">
-            <span class="chat-title" id="chatTitle">贝贝的私人助手</span>
-          </div>
           <div class="chat-log" id="chatLog"></div>
         </div>
       </section>
