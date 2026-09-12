@@ -193,22 +193,42 @@ class _MainScreenState extends State<MainScreen> {
         ),
       ),
       bottomNavigationBar: Container(
+        margin: const EdgeInsets.fromLTRB(24, 0, 24, 18),
         decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: const Color(0xFF38383a), width: 0.5)),
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (i) => setState(() => _currentIndex = i),
-          backgroundColor: Colors.black.withOpacity(0.85),
-          selectedItemColor: const Color(0xFF0a84ff),
-          unselectedItemColor: Colors.white.withOpacity(0.3),
-          selectedFontSize: 10,
-          unselectedFontSize: 10,
-          type: BottomNavigationBarType.fixed,
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.description_outlined, size: 24), label: '资料'),
-            BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline, size: 24), label: '问答'),
+          borderRadius: BorderRadius.circular(42),
+          border: Border.all(color: Colors.white.withOpacity(0.10), width: 0.5),
+          color: const Color(0xFF1c1c1e).withOpacity(0.55),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.35), blurRadius: 32, offset: const Offset(0, 8)),
+            BoxShadow(color: Colors.black.withOpacity(0.20), blurRadius: 8, offset: const Offset(0, 2)),
           ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(42),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(42),
+                border: Border(top: BorderSide(color: Colors.white.withOpacity(0.07), width: 0.5)),
+              ),
+              child: BottomNavigationBar(
+                currentIndex: _currentIndex,
+                onTap: (i) => setState(() => _currentIndex = i),
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                selectedItemColor: const Color(0xFF0a84ff),
+                unselectedItemColor: Colors.white.withOpacity(0.3),
+                selectedFontSize: 10,
+                unselectedFontSize: 10,
+                type: BottomNavigationBarType.fixed,
+                items: const [
+                  BottomNavigationBarItem(icon: Icon(Icons.description_outlined, size: 22), label: '资料'),
+                  BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline, size: 22), label: '问答'),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
