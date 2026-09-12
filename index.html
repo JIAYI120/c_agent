@@ -582,7 +582,17 @@
       else { $("#sheetTitle").textContent = "新建资料"; $("#fTitle").value = ""; $("#fCat").value = "info"; $("#fBody").value = ""; }
       $("#sheetBd").classList.add("open"); requestAnimationFrame(() => $("#sheet").classList.add("open"));
     }
-    function closeSheet() { $("#sheet").classList.remove("open"); setTimeout(() => $("#sheetBd").classList.remove("open"), 380); editingId = null; }
+    function closeSheet() {
+      $("#sheet").classList.remove("open");
+      setTimeout(() => {
+        $("#sheetBd").classList.remove("open");
+        // 清除表单内容
+        $("#fTitle").value = "";
+        $("#fCat").value = "info";
+        $("#fBody").value = "";
+      }, 380);
+      editingId = null;
+    }
     $("#fabAdd").addEventListener("click", () => openSheet(null));
     $("#sheetCancel").addEventListener("click", closeSheet);
     $("#sheetBd").addEventListener("click", closeSheet);
