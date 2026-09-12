@@ -668,9 +668,10 @@ ${data}
       if (/体重|多重/.test(q)) {
         const matches = hits.map(h => ({ value: h.e.body.match(/(\d+)\s*(kg|斤|公斤)/i)?.[0], time: h.e.updated })).filter(m => m.value);
         if (!matches.length) return "暂无记录";
-        // 根据时间词选择
+        // 按时间排序，最新的在最后
+        matches.sort((a, b) => new Date(a.time) - new Date(b.time));
         if (/上周|之前|以前|上次/.test(q)) return matches[0]?.value || "暂无记录";
-        return matches[matches.length - 1]?.value || "暂无记录"; // 默认最新
+        return matches[matches.length - 1]?.value || "暂无记录";
       }
       if (/身高/.test(q)) { const m = hits.map(h => h.e.body.match(/(\d+)\s*(cm|厘米|米)/i)).filter(Boolean); return m.length ? m[m.length-1][0] : "暂无记录"; }
       if (/血型/.test(q)) { const m = hits.map(h => h.e.body.match(/[ABOab][型Bb]?/i)).filter(Boolean); return m.length ? m[m.length-1][0] : "暂无记录"; }
