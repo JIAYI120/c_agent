@@ -482,14 +482,14 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 0 16px;
-      height: 100%;
+      padding: 0 14px;
+      height: 32px;
       cursor: pointer;
       font-family: inherit;
-      border-radius: 30px;
+      border-radius: 16px;
       transition: all 0.25s ease;
     }
-    .tabbar .tab svg { width: 20px; height: 20px; }
+    .tabbar .tab svg { width: 18px; height: 18px; }
     .tabbar .tab.active {
       color: var(--accent);
       background: rgba(10,132,255,0.10);
@@ -622,7 +622,9 @@
         <div class="input-island">
           <input id="chatInput" type="text" placeholder="根据我的资料回答…" autocomplete="off" />
         </div>
-        <button class="send-island" id="chatSend">↑</button>
+        <button class="send-island" id="chatSend">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
       </div>
     </div>
 
