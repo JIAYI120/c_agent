@@ -176,6 +176,7 @@
     .badge { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text2); }
     .badge.ok { background: rgba(48,209,88,0.10); color: var(--ok); }
     .badge.warn { background: rgba(255,159,10,0.10); color: var(--warn); }
+    .large-title .actions { display: flex; gap: 8px; align-items: center; }
     .fab {
       width: 38px; height: 38px;
       border-radius: 19px; border: none;
@@ -186,10 +187,29 @@
       cursor: pointer;
       transition: all 0.15s;
       flex-shrink: 0;
-      margin-top: 8px;
       box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.08);
     }
     .fab:active { transform: scale(0.88); background: rgba(255,255,255,0.10); }
+    .delete-btn {
+      width: 38px; height: 38px;
+      border-radius: 19px; border: none;
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(20px);
+      color: var(--accent);
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex-shrink: 0;
+      box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.08);
+    }
+    .delete-btn:active { transform: scale(0.88); }
+    .delete-btn.active {
+      background: var(--err);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(255,69,58,0.4);
+    }
+    .row-item.delete-mode { cursor: pointer; }
+    .row-item.delete-mode:active { background: rgba(255,69,58,0.15); border-color: var(--err); }
     .chat-wrap { display: flex; flex-direction: column; height: 100%; }
     .chat-log { flex: 1; overflow-y: auto; padding: 12px 16px 16px; }
     .bubble {
@@ -469,7 +489,12 @@
         <h1 id="pageTitle">资料</h1>
         <p class="sub" id="pageSub"></p>
       </div>
-      <button class="fab" id="fabAdd">+</button>
+      <div class="actions" id="headerActions">
+        <button class="fab" id="fabAdd">+</button>
+        <button class="delete-btn" id="deleteModeBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>
+        </button>
+      </div>
     </div>
     <main>
       <section class="screen active" id="screen-entries">
@@ -579,6 +604,7 @@
     let entries = [...seed];
     let filter = "info";
     let editingId = null;
+    let deleteMode = false;
     const $ = s => document.querySelector(s);
     const $$ = s => [...document.querySelectorAll(s)];
     function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 1800); }
@@ -592,9 +618,26 @@
       if (!list.length) { box.innerHTML = '<div class="empty"><div class="big" style="opacity:.15;font-size:64px">∅</div>还没有资料<br/>点标题右侧 + 开始录入</div>'; return; }
       box.innerHTML = list.map(e => {
         const st = e.status === "ready" ? '<span class="badge ok">已向量</span>' : e.status === "pending" ? '<span class="badge warn">向量中</span>' : '<span class="badge">失败</span>';
-        return `<div class="row-item" data-edit="${e.id}"><div class="body"><p class="title">${esc(e.title)}</p><p class="desc">${esc(e.body)}</p><div class="meta">${st}<span class="badge">${esc(e.updated)}</span></div></div><span class="chevron">›</span></div>`;
+        return `<div class="row-item" data-id="${e.id}"><div class="body"><p class="title">${esc(e.title)}</p><p class="desc">${esc(e.body)}</p><div class="meta">${st}<span class="badge">${esc(e.updated)}</span></div></div><span class="chevron">›</span></div>`;
       }).join("");
-      box.querySelectorAll("[data-edit]").forEach(el => { el.addEventListener("click", () => openSheet(Number(el.dataset.edit))); });
+      box.querySelectorAll(".row-item").forEach(el => {
+        if (deleteMode) el.classList.add("delete-mode");
+        el.addEventListener("click", () => {
+          const id = Number(el.dataset.id);
+          if (deleteMode) {
+            // 删除模式：点击删除
+            const entry = entries.find(e => e.id === id);
+            if (entry && confirm(`确定删除「${entry.title}」？`)) {
+              entries = entries.filter(e => e.id !== id);
+              renderEntries();
+              toast("已删除");
+            }
+          } else {
+            // 普通模式：点击编辑
+            openSheet(id);
+          }
+        });
+      });
     }
     function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
     function openSheet(id) {
@@ -629,6 +672,13 @@
       editingId = null;
     }
     $("#fabAdd").addEventListener("click", () => openSheet(null));
+    // 删除模式切换
+    $("#deleteModeBtn").addEventListener("click", () => {
+      deleteMode = !deleteMode;
+      $("#deleteModeBtn").classList.toggle("active", deleteMode);
+      renderEntries();
+      toast(deleteMode ? "删除模式：点击卡片删除" : "退出删除模式");
+    });
     $("#sheetCancel").addEventListener("click", closeSheet);
     $("#sheetBd").addEventListener("click", closeSheet);
     // 分类按钮点击
@@ -658,8 +708,14 @@
         $$(".tab").forEach(t => t.classList.toggle("active", t === tab));
         $$(".screen").forEach(s => s.classList.toggle("active", s.id === "screen-" + id));
         $("#pageTitle").textContent = meta[id].t;
-        $("#fabAdd").style.display = id === "entries" ? "block" : "none";
+        // 资料页显示新增和删除按钮，问答页隐藏
+        $("#headerActions").style.display = id === "entries" ? "flex" : "none";
         $("#chatIslands").classList.toggle("hidden", id !== "chat");
+        // 退出删除模式
+        if (id !== "entries") {
+          deleteMode = false;
+          $("#deleteModeBtn").classList.remove("active");
+        }
       });
     });
 
