@@ -275,10 +275,10 @@ class _EntriesScreenState extends State<EntriesScreen> {
       _entries.where((e) => e['category'] == _filter).toList();
 
   final Map<String, Map<String, dynamic>> _catMeta = {
-    'info': {'name': '信息', 'icon': Icons.horizontal_rule, 'color': const Color(0xFF0a84ff)},
-    'like': {'name': '喜好', 'icon': Icons.diamond_outlined, 'color': const Color(0xFF30d158)},
-    'plan': {'name': '日程', 'icon': Icons.crop_square_rounded, 'color': const Color(0xFFff9f0a)},
-    'other': {'name': '其它', 'icon': Icons.circle, 'color': const Color(0xFFbf5af2)},
+    'info': {'name': '信息', 'color': const Color(0xFF0a84ff)},
+    'like': {'name': '喜好', 'color': const Color(0xFF30d158)},
+    'plan': {'name': '日程', 'color': const Color(0xFFff9f0a)},
+    'other': {'name': '其它', 'color': const Color(0xFFbf5af2)},
   };
 
   @override
@@ -359,8 +359,6 @@ class _EntriesScreenState extends State<EntriesScreen> {
   }
 
   Widget _entryRow(Map<String, dynamic> entry) {
-    final cat = entry['category'] as String;
-    final meta = _catMeta[cat] ?? _catMeta['other']!;
     final status = entry['embedding_status'] as String;
     final statusColor = status == 'ready' ? const Color(0xFF30d158) : const Color(0xFFff9f0a);
     final statusText = status == 'ready' ? '已向量' : '向量中';
@@ -387,16 +385,6 @@ class _EntriesScreenState extends State<EntriesScreen> {
         ),
         child: Row(
           children: [
-            // Icon
-            Container(
-              width: 32, height: 32,
-              decoration: BoxDecoration(
-                color: (meta['color'] as Color).withOpacity(0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(meta['icon'] as IconData, size: 16, color: meta['color'] as Color),
-            ),
-            const SizedBox(width: 12),
             // Body
             Expanded(
               child: Column(
