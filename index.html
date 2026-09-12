@@ -614,7 +614,7 @@
 
     const greetings = { "你好":"你好呀！有什么想问我的？","嗨":"嗨！我在~","在吗":"在的~","谢谢":"不客气！","谢了":"不客气！","嗯":"嗯嗯~","好的":"好的~","ok":"好的~","嗯嗯":"嗯嗯~" };
 
-    // 简单检索（不用同义词，Qwen自己判断）
+    // 简单检索（满足阈值的全部给Qwen）
     function retrieve(q) {
       const chars = [...new Set(q.replace(/\s/g, ""))];
       return entries.filter(e => e.status === "ready")
@@ -624,8 +624,7 @@
           return { e, score: chars.length ? hits / chars.length : 0 };
         })
         .filter(x => x.score > 0)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 5);
+        .sort((a, b) => b.score - a.score);
     }
 
     // 构建 RAG Prompt（真实Prompt，打包后给Qwen）
@@ -658,16 +657,9 @@ ${data}
     }
 
     function guidePrompt(q) {
-      const cats = [
-        { key: "info", hint: "身高体重、血型、过敏史等基本信息" },
-        { key: "like", hint: "饮食偏好、喜欢的颜色、运动习惯等" },
-        { key: "plan", hint: "日程安排、待办事项、约会等" },
-      ];
-      const matched = cats.find(c => q.includes(c.hint.slice(0, 4))) || cats[0];
-      const names = { info: "信息", like: "喜好", plan: "日程" };
       return {
-        text: `我还不知道这个呢，要告诉我吗？\n\n你可以添加到「${names[matched.key]}」分类里~`,
-        cat: matched.key, title: q.slice(0, 20),
+        text: `我还不知道这个呢，要告诉我吗？`,
+        cat: "info", title: q.slice(0, 20),
       };
     }
 
