@@ -304,23 +304,6 @@
     }
     .ref:active { background: rgba(10,132,255,0.25); }
 
-    .suggestions {
-      display: flex; flex-wrap: wrap; gap: 8px;
-      padding: 0 16px 14px;
-    }
-    .sug {
-      border: 0.5px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.03);
-      color: var(--text2);
-      border-radius: 20px;
-      padding: 10px 18px;
-      font-size: 14px;
-      font-family: inherit;
-      cursor: pointer;
-      transition: all 0.12s;
-    }
-    .sug:active { background: rgba(255,255,255,0.07); }
-
     /* ── Sheet ── */
     .sheet-backdrop {
       position: absolute; inset: 0;
@@ -597,12 +580,6 @@
 
       <section class="screen" id="screen-chat">
         <div class="chat-wrap">
-          <div class="suggestions" id="suggestions">
-            <button class="sug" data-q="我身高体重多少？">我身高体重多少</button>
-            <button class="sug" data-q="我有什么饮食偏好？">饮食偏好</button>
-            <button class="sug" data-q="这周有什么安排？">这周安排</button>
-            <button class="sug" data-q="生理期大概什么时候？">生理期</button>
-          </div>
           <div class="chat-log" id="chatLog"></div>
         </div>
       </section>
@@ -846,7 +823,6 @@
       q = (q || "").trim();
       if (!q) return;
       addBubble("user", esc(q));
-      $("#suggestions").style.display = "none";
       const typing = addBubble("bot", '<span class="typing"><i></i><i></i><i></i></span>');
       $("#chatSend").disabled = true;
       setTimeout(() => {
@@ -870,7 +846,6 @@
     }
     $("#chatSend").addEventListener("click", () => { ask($("#chatInput").value); $("#chatInput").value = ""; });
     $("#chatInput").addEventListener("keydown", e => { if (e.key === "Enter") { ask($("#chatInput").value); $("#chatInput").value = ""; } });
-    $$(".sug").forEach(b => b.addEventListener("click", () => ask(b.dataset.q)));
 
     renderEntries();
   </script>
