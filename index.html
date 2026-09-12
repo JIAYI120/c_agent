@@ -590,10 +590,10 @@
       $("#statReady").textContent = entries.filter(e => e.status === "ready").length;
       const box = $("#entryList");
       if (!list.length) { box.innerHTML = '<div class="empty"><div class="big" style="opacity:.15;font-size:64px">∅</div>还没有资料<br/>点标题右侧 + 开始录入</div>'; return; }
-      box.innerHTML = '<div class="entry-group glass">' + list.map(e => {
+      box.innerHTML = list.map(e => {
         const st = e.status === "ready" ? '<span class="badge ok">已向量</span>' : e.status === "pending" ? '<span class="badge warn">向量中</span>' : '<span class="badge">失败</span>';
         return `<div class="row-item" data-edit="${e.id}"><div class="body"><p class="title">${esc(e.title)}</p><p class="desc">${esc(e.body)}</p><div class="meta">${st}<span class="badge">${esc(e.updated)}</span></div></div><span class="chevron">›</span></div>`;
-      }).join("") + '</div>';
+      }).join("");
       box.querySelectorAll("[data-edit]").forEach(el => { el.addEventListener("click", () => openSheet(Number(el.dataset.edit))); });
     }
     function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
