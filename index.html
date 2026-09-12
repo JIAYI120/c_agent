@@ -957,6 +957,27 @@
       };
     }
 
+    // 从资料body中提取匹配片段
+    function extractRelevant(q, body) {
+      // 按分号/句号/换行拆分
+      const parts = body.split(/[；;。\n]/).filter(s => s.trim());
+      if (parts.length <= 1) return body;
+
+      // 提取问题中的关键词
+      const keywords = Object.keys(synonyms).filter(k => q.includes(k));
+      keywords.push(...q.replace(/[？?！!。，,.]/g, "").split("").filter(c => c.length));
+
+      const matched = parts.filter(p => {
+        const lower = p.toLowerCase();
+        return keywords.some(k => lower.includes(k)) ||
+          Object.entries(synonyms).some(([key, words]) =>
+            q.includes(key) && words.some(w => lower.includes(w))
+          );
+      });
+
+      return matched.length ? matched.join("；") : body;
+    }
+
     // 交互式回答
     function interactiveAnswer(q, hits, intent) {
       if (!hits.length) {
@@ -972,7 +993,11 @@
           const schedule = hits.filter(h => h.e.cat === "plan");
           const items = schedule.length ? schedule : hits;
           if (items.length) {
-            return { text: `温馨提醒：\n${items.map(h => `• ${h.e.title}：${h.e.body}`).join("\n")}\n\n别忘了哦~`, guide: null };
+            const lines = items.map(h => {
+              const relevant = extractRelevant(q, h.e.body);
+              return `• ${h.e.title}：${relevant}`;
+            });
+            return { text: `温馨提醒：\n${lines.join("\n")}\n\n别忘了哦~`, guide: null };
           }
           return { text: `暂时没有安排，要添加日程吗？`, guide: { cat: "plan", title: "新日程", text: "" } };
         }
