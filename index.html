@@ -589,6 +589,9 @@
       <section class="screen" id="screen-chat">
         <div class="chat-bg" id="chatBg"></div>
         <div class="chat-wrap">
+          <div class="chat-header">
+            <span class="chat-title" id="chatTitle">贝贝的私人助手</span>
+          </div>
           <div class="chat-log" id="chatLog"></div>
         </div>
       </section>
@@ -820,47 +823,6 @@
       renderEntries();
       toast(deleteMode ? "删除模式：点击卡片删除" : "退出删除模式");
     });
-
-    // 问答设置
-    let chatName = localStorage.getItem("chatName") || "贝贝的私人助手";
-    let chatBgUrl = localStorage.getItem("chatBgUrl") || "";
-    $("#chatTitle").textContent = chatName;
-    if (chatBgUrl) $("#chatBg").style.backgroundImage = `url(${chatBgUrl})`;
-
-    $("#settingsBtn").addEventListener("click", () => {
-      $("#settingsName").value = chatName;
-      $("#settingsOverlay").classList.add("open");
-    });
-    $("#settingsClose").addEventListener("click", () => $("#settingsOverlay").classList.remove("open"));
-    $("#settingsOverlay").addEventListener("click", (e) => { if (e.target === e.currentTarget) $("#settingsOverlay").classList.remove("open"); });
-
-    $("#uploadBg").addEventListener("click", () => $("#bgFileInput").click());
-    $("#bgFileInput").addEventListener("change", (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          chatBgUrl = ev.target.result;
-          $("#chatBg").style.backgroundImage = `url(${chatBgUrl})`;
-          localStorage.setItem("chatBgUrl", chatBgUrl);
-          toast("背景已更新");
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-    $("#clearBg").addEventListener("click", () => {
-      chatBgUrl = "";
-      $("#chatBg").style.backgroundImage = "none";
-      localStorage.removeItem("chatBgUrl");
-      toast("背景已清除");
-    });
-    $("#saveSettings").addEventListener("click", () => {
-      chatName = $("#settingsName").value.trim() || "贝贝的私人助手";
-      $("#chatTitle").textContent = chatName;
-      localStorage.setItem("chatName", chatName);
-      $("#settingsOverlay").classList.remove("open");
-      toast("设置已保存");
-    });
     // 分页点击
     document.addEventListener("click", (e) => {
       if (e.target.classList.contains("page-btn") && !e.target.disabled) {
@@ -897,7 +859,7 @@
         $$(".tab").forEach(t => t.classList.toggle("active", t === tab));
         $$(".screen").forEach(s => s.classList.toggle("active", s.id === "screen-" + id));
         $("#pageTitle").textContent = meta[id].t;
-        // 资料页显示新增和删除按钮，问答页显示设置按钮
+        // 资料页：显示新增+删除按钮；问答页：显示设置按钮
         $("#fabAdd").style.display = id === "entries" ? "block" : "none";
         $("#deleteModeBtn").style.display = id === "entries" ? "block" : "none";
         $("#settingsBtn").style.display = id === "chat" ? "block" : "none";
