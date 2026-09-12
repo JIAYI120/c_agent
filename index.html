@@ -648,53 +648,13 @@ ${data}
 用户问题：${q}`;
     }
 
-    // Mock LLM（模拟Qwen行为：从Prompt里提取回答）
+    // Mock LLM（原型演示用，打包后替换为 Qwen API）
+    // 所有资料都给 Qwen，让 Qwen 自己判断
     function mockLlmResponse(prompt, q, hits) {
-      const now = new Date();
-      const currentMonth = now.getMonth() + 1;
-      const lastMonth = currentMonth === 1 ? 12 : currentMonth - 1;
-
-      // 时间过滤
-      if (/这个月|本月/.test(q)) {
-        const filtered = hits.filter(h => h.e.body.includes(currentMonth + "月") || h.e.body.includes(currentMonth + "日"));
-        if (filtered.length) return filtered.map(h => h.e.body).join("\n");
-      }
-      if (/上个月/.test(q)) {
-        const filtered = hits.filter(h => h.e.body.includes(lastMonth + "月") || h.e.body.includes(lastMonth + "日"));
-        if (filtered.length) return filtered.map(h => h.e.body).join("\n");
-      }
-
-      // 提取：根据时间词返回对应记录
-      if (/体重|多重/.test(q)) {
-        const matches = hits.map(h => ({ value: h.e.body.match(/(\d+)\s*(kg|斤|公斤)/i)?.[0], time: h.e.updated })).filter(m => m.value);
-        if (!matches.length) return "暂无记录";
-        // 按时间排序，最新的在最后
-        matches.sort((a, b) => new Date(a.time) - new Date(b.time));
-        if (/上周|之前|以前|上次/.test(q)) return matches[0]?.value || "暂无记录";
-        return matches[matches.length - 1]?.value || "暂无记录";
-      }
-      if (/身高/.test(q)) { const m = hits.map(h => h.e.body.match(/(\d+)\s*(cm|厘米|米)/i)).filter(Boolean); return m.length ? m[m.length-1][0] : "暂无记录"; }
-      if (/血型/.test(q)) { const m = hits.map(h => h.e.body.match(/[ABOab][型Bb]?/i)).filter(Boolean); return m.length ? m[m.length-1][0] : "暂无记录"; }
-      if (/过敏/.test(q)) { return hits.filter(h => h.e.body.includes("过敏")).map(h => h.e.body).join("\n") || "暂无记录"; }
-      if (/不吃/.test(q)) { return hits.filter(h => h.e.body.includes("不吃")).map(h => h.e.body).join("\n") || "暂无记录"; }
-
-      // 日程
-      if (/提醒|安排|日程|周[一二三四五六日]/.test(q)) {
-        const schedule = hits.filter(h => h.e.cat === "plan");
-        if (schedule.length) return schedule.map(h => h.e.body).join("\n");
-      }
-
-      // 饮食
-      if (/吃|喝|餐|食/.test(q)) {
-        const likes = hits.filter(h => h.e.cat === "like");
-        if (likes.length) return likes.map(h => h.e.body).join("\n");
-      }
-
-      // 摘要
-      if (/整理|汇总|总结/.test(q)) return hits.map(h => `${h.e.title}：${h.e.body}`).join("\n");
-
-      // 默认返回全部
-      return hits.map(h => h.e.body).join("\n");
+      // 按时间排序，最新的在前
+      const sorted = [...hits].sort((a, b) => new Date(b.e.updated) - new Date(a.e.updated));
+      // 返回全部资料，让 Qwen 判断
+      return sorted.map(h => h.e.body).join("\n");
     }
 
     function guidePrompt(q) {
