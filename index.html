@@ -934,11 +934,11 @@
 
     // 意图检测
     function detectIntent(q) {
-      if (/\b(摘要|整理|汇总|总结|归纳)\b/.test(q)) return "summary";
-      if (/\b(提醒|注意|别忘|本周|这周|明天|今天|日程|安排)\b/.test(q)) return "remind";
-      if (/\b(吃|喝|餐|食|晚餐|午餐|早餐|推荐|喜欢)\b/.test(q)) return "suggest";
-      if (/\b(对比|变化|比较|差)\b/.test(q)) return "compare";
-      if (/\b(缺|还差|还少|补充|还需要)\b/.test(q)) return "missing";
+      if (/摘要|整理|汇总|总结|归纳/.test(q)) return "summary";
+      if (/提醒|注意|别忘|本周|这周|明天|今天|日程|安排|周[一二三四五六日]/.test(q)) return "remind";
+      if (/吃|喝|餐|食|晚餐|午餐|早餐|推荐|喜欢|口味/.test(q)) return "suggest";
+      if (/对比|变化|比较|差/.test(q)) return "compare";
+      if (/缺|还差|还少|补充|还需要/.test(q)) return "missing";
       return "qa";
     }
 
@@ -1023,9 +1023,12 @@
           return { text: `资料挺全的！如果有新信息随时告诉我~`, guide: null };
         }
         default: {
-          // 普通问答，关心式语气
-          const body = hits.map(h => h.e.body).join("\n");
-          return { text: `根据你的资料：\n${body}\n\n有需要补充的随时告诉我哦~`, guide: null };
+          // 普通问答，只展示匹配片段
+          const relevantParts = hits.map(h => {
+            const relevant = extractRelevant(q, h.e.body);
+            return `${h.e.title}：${relevant}`;
+          });
+          return { text: `根据你的资料：\n${relevantParts.join("\n")}\n\n有需要补充的随时告诉我哦~`, guide: null };
         }
       }
     }
