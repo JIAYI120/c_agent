@@ -557,15 +557,15 @@ ${data}
         if (filtered.length) return filtered.map(h => h.e.body).join("\n");
       }
 
-      // 精确提取：只返回问到的部分
-      if (/体重/.test(q)) { const m = allBody.match(/(\d+)\s*(kg|斤|公斤)/i); return m ? m[0] : "68kg"; }
-      if (/身高/.test(q)) { const m = allBody.match(/(\d+)\s*(cm|厘米|米)/i); return m ? m[0] : "175cm"; }
-      if (/血型/.test(q)) { const m = allBody.match(/[ABOab][型Bb]?/i); return m ? m[0] : "O型"; }
-      if (/过敏|忌口/.test(q)) { const m = allBody.match(/.*过敏.*/); return m ? m[0] : "暂无记录"; }
-      if (/不吃|忌口|不喜欢/.test(q)) { const m = allBody.match(/不吃.*/); return m ? m[0] : "暂无记录"; }
-      if (/早餐/.test(q)) { const m = allBody.match(/早餐.*/); return m ? m[0] : "暂无记录"; }
-      if (/几点睡|睡觉/.test(q)) { const m = allBody.match(/\d+[:\：]\d+.*睡/); return m ? m[0] : "暂无记录"; }
-      if (/几点起|起床/.test(q)) { const m = allBody.match(/\d+[:\：]\d+.*起/); return m ? m[0] : "暂无记录"; }
+      // 精确提取：只返回问到的部分，带情绪词
+      if (/体重/.test(q)) { const m = allBody.match(/(\d+)\s*(kg|斤|公斤)/i); return m ? `你的体重是 ${m[0]}，保持得不错哦~` : "68kg"; }
+      if (/身高/.test(q)) { const m = allBody.match(/(\d+)\s*(cm|厘米|米)/i); return m ? `你的身高是 ${m[0]}，标准身材~` : "175cm"; }
+      if (/血型/.test(q)) { const m = allBody.match(/[ABOab][型Bb]?/i); return m ? `你的血型是 ${m[0]}，记得告诉家人哦~` : "O型"; }
+      if (/过敏|忌口/.test(q)) { const m = allBody.match(/.*过敏.*/); return m ? `你要注意：${m[0]}，小心避开~` : "暂无记录，要告诉我吗？"; }
+      if (/不吃|忌口|不喜欢/.test(q)) { const m = allBody.match(/不吃.*/); return m ? `你不：${m[0]}，记住了~` : "暂无记录，要告诉我吗？"; }
+      if (/早餐/.test(q)) { const m = allBody.match(/早餐.*/); return m ? `你的早餐习惯：${m[0]}，健康！` : "暂无记录，要告诉我吗？"; }
+      if (/几点睡|睡觉/.test(q)) { const m = allBody.match(/\d+[:\：]\d+.*睡/); return m ? `你通常 ${m[0]}，记得早点休息哦~` : "暂无记录，要告诉我吗？"; }
+      if (/几点起|起床/.test(q)) { const m = allBody.match(/\d+[:\：]\d+.*起/); return m ? `你通常 ${m[0]}，早起精神好~` : "暂无记录，要告诉我吗？"; }
 
       // 日程提醒
       if (/提醒|注意|别忘|安排|日程|周[一二三四五六日]/.test(q)) {
