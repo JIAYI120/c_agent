@@ -826,6 +826,46 @@
         renderEntries();
       }
     });
+
+    // 问答设置
+    let chatName = localStorage.getItem("chatName") || "贝贝";
+    let chatBgUrl = localStorage.getItem("chatBgUrl") || "";
+    if (chatBgUrl) $("#chatBg").style.backgroundImage = `url(${chatBgUrl})`;
+
+    $("#settingsBtn").addEventListener("click", () => {
+      $("#settingsName").value = chatName;
+      $("#settingsOverlay").classList.add("open");
+    });
+    $("#settingsClose").addEventListener("click", () => $("#settingsOverlay").classList.remove("open"));
+    $("#settingsOverlay").addEventListener("click", (e) => { if (e.target === e.currentTarget) $("#settingsOverlay").classList.remove("open"); });
+
+    $("#uploadBg").addEventListener("click", () => $("#bgFileInput").click());
+    $("#bgFileInput").addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          chatBgUrl = ev.target.result;
+          $("#chatBg").style.backgroundImage = `url(${chatBgUrl})`;
+          localStorage.setItem("chatBgUrl", chatBgUrl);
+          toast("背景已更新");
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+    $("#clearBg").addEventListener("click", () => {
+      chatBgUrl = "";
+      $("#chatBg").style.backgroundImage = "none";
+      localStorage.removeItem("chatBgUrl");
+      toast("背景已清除");
+    });
+    $("#saveSettings").addEventListener("click", () => {
+      chatName = $("#settingsName").value.trim() || "贝贝";
+      localStorage.setItem("chatName", chatName);
+      $("#settingsOverlay").classList.remove("open");
+      toast("设置已保存");
+    });
+
     $("#sheetCancel").addEventListener("click", closeSheet);
     $("#sheetBd").addEventListener("click", closeSheet);
     // 分类按钮点击
