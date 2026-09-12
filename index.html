@@ -718,8 +718,12 @@ ${data}
             const prompt = buildRagPrompt(q, hits);
             console.log("RAG Prompt:", prompt);
             answer = mockLlmResponse(prompt, q, hits);
-            // 生成引用标签：只显示1条，多条显示...
-            const topHit = hits[0];
+            // 生成引用标签：只显示匹配度最高且最新的一条
+            const sorted = [...hits].sort((a, b) => {
+              if (b.score !== a.score) return b.score - a.score;
+              return new Date(b.e.updated) - new Date(a.e.updated);
+            });
+            const topHit = sorted[0];
             const dateStr = topHit.e.updated.slice(0, 10); // 只取年月日
             refsHtml = `<div class="refs">
               <div class="ref" data-ref="${topHit.e.id}">${esc(topHit.e.title)} · ${dateStr}${hits.length > 1 ? `<span class="ref-more" data-refs='${JSON.stringify(hits.map(h => ({id:h.e.id, title:h.e.title, body:h.e.body, date:h.e.updated.slice(0,10)})))}'>...</span>` : ''}</div>
