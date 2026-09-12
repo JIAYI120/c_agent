@@ -652,8 +652,8 @@ ${data}
     function mockLlmResponse(prompt, q, hits) {
       // 按时间排序，最新的在前
       const sorted = [...hits].sort((a, b) => new Date(b.e.updated) - new Date(a.e.updated));
-      // 返回全部资料，让 Qwen 判断
-      return sorted.map(h => h.e.body).join("\n");
+      // 返回最新的一条，模拟 Qwen 会判断返回最新的
+      return sorted[0]?.e.body || "暂无记录";
     }
 
     function guidePrompt(q) {
