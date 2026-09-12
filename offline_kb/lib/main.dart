@@ -3,9 +3,54 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'dart:math';
+import 'dart:ui';
 
 void main() {
   runApp(const BeibeiApp());
+}
+
+// iOS glass morphism container
+class GlassContainer extends StatelessWidget {
+  final Widget child;
+  final EdgeInsets? padding;
+  final EdgeInsets? margin;
+  final BorderRadius? borderRadius;
+
+  const GlassContainer({
+    super.key,
+    required this.child,
+    this.padding,
+    this.margin,
+    this.borderRadius,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: margin,
+      decoration: BoxDecoration(
+        borderRadius: borderRadius ?? BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withOpacity(0.08), width: 0.5),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 3, offset: const Offset(0, 1)),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: borderRadius ?? BorderRadius.circular(14),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
+          child: Container(
+            padding: padding,
+            decoration: BoxDecoration(
+              color: const Color(0xFF1c1c1e).withOpacity(0.72),
+              borderRadius: borderRadius ?? BorderRadius.circular(14),
+            ),
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class BeibeiApp extends StatelessWidget {
@@ -39,6 +84,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
   Database? _db;
+  final _entriesRefresh = ValueNotifier<int>(0);
 
   @override
   void initState() {
@@ -80,21 +126,57 @@ class _MainScreenState extends State<MainScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Large title header
+            // Large title header with FAB
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(titles[_currentIndex],
-                        style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w700, color: Colors.white)),
-                    const SizedBox(height: 2),
-                    Text(subs[_currentIndex],
-                        style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.3))),
-                  ],
-                ),
+              padding: const EdgeInsets.fromLTRB(24, 8, 16, 12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(titles[_currentIndex],
+                            style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: -0.02)),
+                        const SizedBox(height: 4),
+                        Text(subs[_currentIndex],
+                            style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.3))),
+                      ],
+                    ),
+                  ),
+                  // FAB - only show on entries tab
+                  if (_currentIndex == 0)
+                    GestureDetector(
+                      onTap: () async {
+                        final result = await Navigator.push<Map<String, String>>(
+                          context,
+                          MaterialPageRoute(builder: (_) => const EntryFormScreen()),
+                        );
+                        if (result != null && _db != null) {
+                          await _db!.insert('entries', {
+                            ...result,
+                            'embedding_status': 'pending',
+                            'created_at': DateTime.now().toIso8601String(),
+                            'updated_at': DateTime.now().toIso8601String(),
+                          });
+                          // Trigger reload
+                          _entriesRefresh.value++;
+                          setState(() {});
+                        }
+                      },
+                      child: Container(
+                        width: 38, height: 38,
+                        margin: const EdgeInsets.only(top: 6),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF2c2c2e), Color(0xFF1c1c1e)]),
+                          borderRadius: BorderRadius.circular(19),
+                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 3, offset: const Offset(0, 1))],
+                          border: Border.all(color: Colors.white.withOpacity(0.08), width: 0.5),
+                        ),
+                        child: const Icon(Icons.add, color: Color(0xFF0a84ff), size: 22),
+                      ),
+                    ),
+                ],
               ),
             ),
             // Content
@@ -102,7 +184,7 @@ class _MainScreenState extends State<MainScreen> {
               child: IndexedStack(
                 index: _currentIndex,
                 children: [
-                  EntriesScreen(db: _db),
+                  EntriesScreen(db: _db, refreshNotifier: _entriesRefresh),
                   ChatScreen(db: _db),
                 ],
               ),
@@ -135,7 +217,8 @@ class _MainScreenState extends State<MainScreen> {
 
 class EntriesScreen extends StatefulWidget {
   final Database? db;
-  const EntriesScreen({super.key, required this.db});
+  final ValueNotifier<int>? refreshNotifier;
+  const EntriesScreen({super.key, required this.db, this.refreshNotifier});
 
   @override
   State<EntriesScreen> createState() => _EntriesScreenState();
@@ -149,6 +232,13 @@ class _EntriesScreenState extends State<EntriesScreen> {
   void initState() {
     super.initState();
     _loadEntries();
+    widget.refreshNotifier?.addListener(_loadEntries);
+  }
+
+  @override
+  void dispose() {
+    widget.refreshNotifier?.removeListener(_loadEntries);
+    super.dispose();
   }
 
   Future<void> _loadEntries() async {
@@ -169,87 +259,49 @@ class _EntriesScreenState extends State<EntriesScreen> {
     'other': {'name': '其他', 'icon': Icons.description, 'color': const Color(0xFFbf5af2)},
   };
 
-  Future<void> _addEntry() async {
-    final result = await Navigator.push<Map<String, String>>(
-      context,
-      MaterialPageRoute(builder: (_) => const EntryFormScreen()),
-    );
-    if (result != null && widget.db != null) {
-      await widget.db!.insert('entries', {
-        ...result,
-        'embedding_status': 'pending',
-        'created_at': DateTime.now().toIso8601String(),
-        'updated_at': DateTime.now().toIso8601String(),
-      });
-      _loadEntries();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Stack(
+    return Column(
       children: [
-        Column(
-          children: [
-            // Stats
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: Row(
-                children: [
-                  _statCard('${_entries.length}', '资料'),
-                  const SizedBox(width: 12),
-                  _statCard('${_entries.where((e) => e['embedding_status'] == 'ready').length}', '已向量'),
-                ],
-              ),
-            ),
-            // Filters
-            SizedBox(
-              height: 36,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  _filterChip('全部', 'all'),
-                  _filterChip('档案', 'profile'),
-                  _filterChip('姨妈', 'period'),
-                  _filterChip('日程', 'schedule'),
-                  _filterChip('偏好', 'preference'),
-                  _filterChip('笔记', 'note'),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            // List
-            Expanded(
-              child: _filtered.isEmpty
-                  ? const Center(child: Text('还没有资料\n点右上角 + 开始录入',
-                      style: TextStyle(color: Color(0xFFebebf54d), fontSize: 15),
-                      textAlign: TextAlign.center))
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: _filtered.length,
-                      itemBuilder: (_, i) => _entryRow(_filtered[i]),
-                    ),
-            ),
-          ],
-        ),
-        // FAB top-right
-        Positioned(
-          right: 16,
-          top: 4,
-          child: GestureDetector(
-            onTap: _addEntry,
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: const Color(0xFF0a84ff),
-                shape: BoxShape.circle,
-                boxShadow: [BoxShadow(color: const Color(0xFF0a84ff).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 2))],
-              ),
-              child: const Icon(Icons.add, color: Colors.white, size: 22),
-            ),
+        // Stats
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: Row(
+            children: [
+              _statCard('${_entries.length}', '资料'),
+              const SizedBox(width: 12),
+              _statCard('${_entries.where((e) => e['embedding_status'] == 'ready').length}', '已向量'),
+            ],
           ),
+        ),
+        // Filters
+        SizedBox(
+          height: 36,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            children: [
+              _filterChip('全部', 'all'),
+              _filterChip('档案', 'profile'),
+              _filterChip('姨妈', 'period'),
+              _filterChip('日程', 'schedule'),
+              _filterChip('偏好', 'preference'),
+              _filterChip('笔记', 'note'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        // List
+        Expanded(
+          child: _filtered.isEmpty
+              ? const Center(child: Text('还没有资料\n点标题右侧 + 开始录入',
+                  style: TextStyle(color: Color(0xFFebebf54d), fontSize: 15),
+                  textAlign: TextAlign.center))
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: _filtered.length,
+                  itemBuilder: (_, i) => _entryRow(_filtered[i]),
+                ),
         ),
       ],
     );
@@ -257,15 +309,11 @@ class _EntriesScreenState extends State<EntriesScreen> {
 
   Widget _statCard(String n, String l) {
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1c1c1e),
-          borderRadius: BorderRadius.circular(12),
-        ),
+      child: GlassContainer(
+        padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(n, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: Color(0xFF0a84ff))),
-          const SizedBox(height: 2),
+          Text(n, style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700, color: Color(0xFF0a84ff), height: 1)),
+          const SizedBox(height: 4),
           Text(l, style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.3))),
         ]),
       ),
