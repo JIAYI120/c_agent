@@ -567,6 +567,9 @@
         <button class="delete-btn" id="deleteModeBtn">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>
         </button>
+        <button class="delete-btn" id="settingsBtn" style="display:none;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        </button>
       </div>
     </div>
     <main>
@@ -586,12 +589,6 @@
       <section class="screen" id="screen-chat">
         <div class="chat-bg" id="chatBg"></div>
         <div class="chat-wrap">
-          <div class="chat-header">
-            <span class="chat-title" id="chatTitle">贝贝的私人助手</span>
-            <button class="settings-btn" id="settingsBtn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-            </button>
-          </div>
           <div class="chat-log" id="chatLog"></div>
         </div>
       </section>
@@ -900,8 +897,10 @@
         $$(".tab").forEach(t => t.classList.toggle("active", t === tab));
         $$(".screen").forEach(s => s.classList.toggle("active", s.id === "screen-" + id));
         $("#pageTitle").textContent = meta[id].t;
-        // 资料页显示新增和删除按钮，问答页隐藏
-        $("#headerActions").style.display = id === "entries" ? "flex" : "none";
+        // 资料页显示新增和删除按钮，问答页显示设置按钮
+        $("#fabAdd").style.display = id === "entries" ? "block" : "none";
+        $("#deleteModeBtn").style.display = id === "entries" ? "block" : "none";
+        $("#settingsBtn").style.display = id === "chat" ? "block" : "none";
         $("#chatIslands").classList.toggle("hidden", id !== "chat");
         // 退出删除模式
         if (id !== "entries") {
