@@ -820,21 +820,50 @@
       log.scrollTop = log.scrollHeight;
       return d;
     }
+    // 问候白名单
+    const greetings = {
+      "你好": "你好呀！有什么想问我的？",
+      "嗨": "嗨！我在，想聊什么？",
+      "在吗": "在的，随时可以问我~",
+      "谢谢": "不客气！",
+      "谢了": "不客气！",
+      "嗯": "嗯嗯~",
+      "好的": "好的~",
+      "ok": "好的~",
+      "嗯嗯": "嗯嗯~",
+    };
+
     function ask(q) {
       q = (q || "").trim();
       if (!q) return;
       addBubble("user", esc(q));
       const typing = addBubble("bot", '<span class="typing"><i></i><i></i><i></i></span>');
       $("#chatSend").disabled = true;
+
       setTimeout(() => {
+        let answer;
+        const lowerQ = q.toLowerCase();
+
+        // 1. 问候匹配
+        if (greetings[lowerQ]) {
+          answer = greetings[lowerQ];
+        } else {
+          // 2. 检索资料
+          const hits = retrieve(q);
+          if (hits.length) {
+            answer = mockAnswer(q, hits);
+          } else {
+            answer = "暂无相关个人资料，你可以试试问我身高、日程、喜好等~";
+          }
+        }
+
         const hits = retrieve(q);
-        const ans = mockAnswer(q, hits);
-        const refs = hits.length
+        const refs = hits.length && !greetings[lowerQ]
           ? `<div class="refs">${hits.map(h =>
               `<div class="ref" data-ref="${h.e.id}">📎 ${esc(h.e.title)} · ${(h.score * 100).toFixed(0)}%</div>`
             ).join("")}</div>`
           : "";
-        typing.innerHTML = esc(ans).replace(/\n/g, "<br/>") + refs;
+        typing.innerHTML = esc(answer).replace(/\n/g, "<br/>") + refs;
         typing.querySelectorAll("[data-ref]").forEach(r => {
           r.addEventListener("click", () => {
             $$(".tab")[0].click();
@@ -843,7 +872,7 @@
         });
         $("#chatSend").disabled = false;
         $("#chatLog").scrollTop = $("#chatLog").scrollHeight;
-      }, 700 + Math.random() * 400);
+      }, 400 + Math.random() * 300);
     }
     $("#chatSend").addEventListener("click", () => { ask($("#chatInput").value); $("#chatInput").value = ""; });
     $("#chatInput").addEventListener("keydown", e => { if (e.key === "Enter") { ask($("#chatInput").value); $("#chatInput").value = ""; } });
