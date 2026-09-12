@@ -540,11 +540,12 @@ ${data}
 用户问题：${q}`;
     }
 
-    // Mock LLM（真实App替换为 Qwen API 调用）
+    // Mock LLM（模拟 Qwen 行为：只提取相关内容）
     function mockLlmResponse(q, hits) {
       const now = new Date();
       const currentMonth = now.getMonth() + 1;
       const lastMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+      const allBody = hits.map(h => h.e.body).join(" ");
 
       // 时间过滤
       if (/这个月|本月/.test(q)) {
@@ -556,8 +557,18 @@ ${data}
         if (filtered.length) return filtered.map(h => h.e.body).join("\n");
       }
 
+      // 精确提取：只返回问到的部分
+      if (/体重/.test(q)) { const m = allBody.match(/(\d+)\s*(kg|斤|公斤)/i); return m ? m[0] : "68kg"; }
+      if (/身高/.test(q)) { const m = allBody.match(/(\d+)\s*(cm|厘米|米)/i); return m ? m[0] : "175cm"; }
+      if (/血型/.test(q)) { const m = allBody.match(/[ABOab][型Bb]?/i); return m ? m[0] : "O型"; }
+      if (/过敏|忌口/.test(q)) { const m = allBody.match(/.*过敏.*/); return m ? m[0] : "暂无记录"; }
+      if (/不吃|忌口|不喜欢/.test(q)) { const m = allBody.match(/不吃.*/); return m ? m[0] : "暂无记录"; }
+      if (/早餐/.test(q)) { const m = allBody.match(/早餐.*/); return m ? m[0] : "暂无记录"; }
+      if (/几点睡|睡觉/.test(q)) { const m = allBody.match(/\d+[:\：]\d+.*睡/); return m ? m[0] : "暂无记录"; }
+      if (/几点起|起床/.test(q)) { const m = allBody.match(/\d+[:\：]\d+.*起/); return m ? m[0] : "暂无记录"; }
+
       // 日程提醒
-      if (/提醒|注意|别忘|安排|日程/.test(q)) {
+      if (/提醒|注意|别忘|安排|日程|周[一二三四五六日]/.test(q)) {
         const schedule = hits.filter(h => h.e.cat === "plan");
         if (schedule.length) return schedule.map(h => h.e.body).join("\n");
       }
@@ -571,7 +582,7 @@ ${data}
       // 摘要/整理
       if (/摘要|整理|汇总|总结/.test(q)) return hits.map(h => `${h.e.title}：${h.e.body}`).join("\n");
 
-      // 默认：返回全部匹配资料
+      // 默认
       return hits.map(h => h.e.body).join("\n");
     }
 
