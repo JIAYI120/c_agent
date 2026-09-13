@@ -85,6 +85,7 @@ class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
   Database? _db;
   final _entriesRefresh = ValueNotifier<int>(0);
+  bool _deleteMode = false;
 
   @override
   void initState() {
@@ -144,37 +145,68 @@ class _MainScreenState extends State<MainScreen> {
                       ],
                     ),
                   ),
-                  // FAB - only show on entries tab
+                  // FAB + Delete button - only show on entries tab
                   if (_currentIndex == 0)
-                    GestureDetector(
-                      onTap: () async {
-                        final result = await Navigator.push<Map<String, String>>(
-                          context,
-                          MaterialPageRoute(builder: (_) => const EntryFormScreen()),
-                        );
-                        if (result != null && _db != null) {
-                          await _db!.insert('entries', {
-                            ...result,
-                            'embedding_status': 'pending',
-                            'created_at': DateTime.now().toIso8601String(),
-                            'updated_at': DateTime.now().toIso8601String(),
-                          });
-                          // Trigger reload
-                          _entriesRefresh.value++;
-                          setState(() {});
-                        }
-                      },
-                      child: Container(
-                        width: 38, height: 38,
-                        margin: const EdgeInsets.only(top: 6),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF2c2c2e), Color(0xFF1c1c1e)]),
-                          borderRadius: BorderRadius.circular(19),
-                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 3, offset: const Offset(0, 1))],
-                          border: Border.all(color: Colors.white.withOpacity(0.08), width: 0.5),
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () async {
+                            final result = await Navigator.push<Map<String, String>>(
+                              context,
+                              MaterialPageRoute(builder: (_) => const EntryFormScreen()),
+                            );
+                            if (result != null && _db != null) {
+                              await _db!.insert('entries', {
+                                ...result,
+                                'embedding_status': 'pending',
+                                'created_at': DateTime.now().toIso8601String(),
+                                'updated_at': DateTime.now().toIso8601String(),
+                              });
+                              _entriesRefresh.value++;
+                              setState(() {});
+                            }
+                          },
+                          child: Container(
+                            width: 38, height: 38,
+                            margin: const EdgeInsets.only(top: 6, right: 8),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF2c2c2e), Color(0xFF1c1c1e)]),
+                              borderRadius: BorderRadius.circular(19),
+                              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 3, offset: const Offset(0, 1))],
+                              border: Border.all(color: Colors.white.withOpacity(0.08), width: 0.5),
+                            ),
+                            child: const Icon(Icons.add, color: Color(0xFF0a84ff), size: 22),
+                          ),
                         ),
-                        child: const Icon(Icons.add, color: Color(0xFF0a84ff), size: 22),
-                      ),
+                        // Delete mode toggle
+                        GestureDetector(
+                          onTap: () {
+                            setState(() => _deleteMode = !_deleteMode);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(_deleteMode ? '删除模式：点击卡片删除' : '退出删除模式'), duration: const Duration(seconds: 1)),
+                            );
+                          },
+                          child: Container(
+                            width: 38, height: 38,
+                            margin: const EdgeInsets.only(top: 6),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: _deleteMode
+                                    ? [const Color(0xFFff453a), const Color(0xFFcc3630)]
+                                    : [const Color(0xFF2c2c2e), const Color(0xFF1c1c1e)],
+                              ),
+                              borderRadius: BorderRadius.circular(19),
+                              boxShadow: _deleteMode
+                                  ? [BoxShadow(color: const Color(0xFFff453a).withOpacity(0.4), blurRadius: 6, offset: const Offset(0, 2))]
+                                  : [BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 3, offset: const Offset(0, 1))],
+                              border: Border.all(color: Colors.white.withOpacity(0.08), width: 0.5),
+                            ),
+                            child: Icon(Icons.delete_outline, color: _deleteMode ? Colors.white : const Color(0xFF0a84ff), size: 20),
+                          ),
+                        ),
+                      ],
                     ),
                 ],
               ),
@@ -184,7 +216,16 @@ class _MainScreenState extends State<MainScreen> {
               child: IndexedStack(
                 index: _currentIndex,
                 children: [
-                  EntriesScreen(db: _db, refreshNotifier: _entriesRefresh),
+                  EntriesScreen(
+                    db: _db,
+                    refreshNotifier: _entriesRefresh,
+                    deleteMode: _deleteMode,
+                    onDelete: (id) async {
+                      await _db?.delete('entries', where: 'id = ?', whereArgs: [id]);
+                      _entriesRefresh.value++;
+                      setState(() {});
+                    },
+                  ),
                   ChatScreen(db: _db),
                 ],
               ),
@@ -226,7 +267,12 @@ class _MainScreenState extends State<MainScreen> {
   Widget _tabIcon(int index, IconData icon) {
     final active = _currentIndex == index;
     return GestureDetector(
-      onTap: () => setState(() => _currentIndex = index),
+      onTap: () {
+        setState(() {
+          _currentIndex = index;
+          if (index != 0) _deleteMode = false; // Exit delete mode when switching tabs
+        });
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
@@ -242,7 +288,9 @@ class _MainScreenState extends State<MainScreen> {
 class EntriesScreen extends StatefulWidget {
   final Database? db;
   final ValueNotifier<int>? refreshNotifier;
-  const EntriesScreen({super.key, required this.db, this.refreshNotifier});
+  final bool deleteMode;
+  final Function(int)? onDelete;
+  const EntriesScreen({super.key, required this.db, this.refreshNotifier, this.deleteMode = false, this.onDelete});
 
   @override
   State<EntriesScreen> createState() => _EntriesScreenState();
@@ -269,6 +317,12 @@ class _EntriesScreenState extends State<EntriesScreen> {
     if (widget.db == null) return;
     final list = await widget.db!.query('entries', orderBy: 'updated_at DESC');
     setState(() => _entries = list);
+  }
+
+  Future<void> _deleteEntry(int id) async {
+    if (widget.db == null) return;
+    await widget.db!.delete('entries', where: 'id = ?', whereArgs: [id]);
+    _loadEntries();
   }
 
   List<Map<String, dynamic>> get _filtered =>
@@ -362,20 +416,47 @@ class _EntriesScreenState extends State<EntriesScreen> {
     final status = entry['embedding_status'] as String;
     final statusColor = status == 'ready' ? const Color(0xFF30d158) : const Color(0xFFff9f0a);
     final statusText = status == 'ready' ? '已向量' : '向量中';
+    final isDeleteMode = widget.deleteMode;
 
     return GestureDetector(
       onTap: () async {
-        final result = await Navigator.push<Map<String, String>>(
-          context,
-          MaterialPageRoute(builder: (_) => EntryFormScreen(entry: entry)),
-        );
-        if (result != null && widget.db != null) {
-          await widget.db!.update('entries', {
-            ...result,
-            'embedding_status': 'pending',
-            'updated_at': DateTime.now().toIso8601String(),
-          }, where: 'id = ?', whereArgs: [entry['id']]);
-          _loadEntries();
+        if (isDeleteMode && widget.onDelete != null) {
+          // Delete mode: show confirmation
+          final confirmed = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              backgroundColor: const Color(0xFF1c1c1e),
+              title: const Text('确认删除', style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600)),
+              content: Text('确定删除「${entry['title']}」？', style: const TextStyle(color: Color(0xFFebebf5cc))),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('取消', style: TextStyle(color: Color(0xFF0a84ff))),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('删除', style: TextStyle(color: Color(0xFFff453a))),
+                ),
+              ],
+            ),
+          );
+          if (confirmed == true) {
+            widget.onDelete!(entry['id'] as int);
+          }
+        } else {
+          // Normal mode: edit
+          final result = await Navigator.push<Map<String, String>>(
+            context,
+            MaterialPageRoute(builder: (_) => EntryFormScreen(entry: entry)),
+          );
+          if (result != null && widget.db != null) {
+            await widget.db!.update('entries', {
+              ...result,
+              'embedding_status': 'pending',
+              'updated_at': DateTime.now().toIso8601String(),
+            }, where: 'id = ?', whereArgs: [entry['id']]);
+            _loadEntries();
+          }
         }
       },
       child: Container(
