@@ -1,5 +1,3 @@
-import 'dart:math';
-
 /// 检索服务
 /// 使用余弦相似度在向量空间中检索相关条目
 class RetrievalService {

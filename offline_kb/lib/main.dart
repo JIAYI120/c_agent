@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'dart:math';
 import 'dart:ui';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
@@ -39,7 +38,6 @@ void main() {
   runApp(const BeibeiApp());
 }
 
-// iOS glass morphism container
 class GlassContainer extends StatelessWidget {
   final Widget child;
   final EdgeInsets? padding;
@@ -147,9 +145,7 @@ class _MainScreenState extends State<MainScreen> {
       },
     );
     
-    // 初始化嵌入服务并启动队列
     await _initEmbeddingQueue();
-    
     setState(() {});
   }
 
@@ -158,11 +154,9 @@ class _MainScreenState extends State<MainScreen> {
       final appDir = await getApplicationDocumentsDirectory();
       final embedding = EmbeddingService();
       await embedding.init('${appDir.path}/models/embedding.onnx');
-      
       _embeddingQueue = EmbeddingQueue(db: _db, embedding: embedding);
       await _embeddingQueue!.start();
     } catch (e) {
-      // 嵌入服务初始化失败，继续运行（问答功能将不可用）
       print('Embedding queue init failed: $e');
     }
   }
@@ -176,22 +170,17 @@ class _MainScreenState extends State<MainScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Large title header with FAB
+            // Header with title and buttons
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 8, 16, 12),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(titles[_currentIndex],
-                            style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: -0.02)),
-                      ],
-                    ),
+                    child: Text(titles[_currentIndex],
+                        style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: -0.02)),
                   ),
-                  // FAB + Delete button - only show on entries tab
+                  // FAB + Delete button - only on entries tab
                   if (_currentIndex == 0)
                     Row(
                       children: [
@@ -210,14 +199,12 @@ class _MainScreenState extends State<MainScreen> {
                               });
                               _entriesRefresh.value++;
                               setState(() {});
-                              
-                              // 启动嵌入队列
                               _embeddingQueue?.start();
                             }
                           },
                           child: Container(
                             width: 38, height: 38,
-                            margin: const EdgeInsets.only(top: 6, right: 8),
+                            margin: const EdgeInsets.only(right: 8),
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF2c2c2e), Color(0xFF1c1c1e)]),
                               borderRadius: BorderRadius.circular(19),
@@ -227,7 +214,6 @@ class _MainScreenState extends State<MainScreen> {
                             child: const Icon(Icons.add, color: Color(0xFF0a84ff), size: 22),
                           ),
                         ),
-                        // Delete mode toggle
                         GestureDetector(
                           onTap: () {
                             setState(() => _deleteMode = !_deleteMode);
@@ -237,7 +223,6 @@ class _MainScreenState extends State<MainScreen> {
                           },
                           child: Container(
                             width: 38, height: 38,
-                            margin: const EdgeInsets.only(top: 6),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 begin: Alignment.topCenter,
@@ -319,7 +304,7 @@ class _MainScreenState extends State<MainScreen> {
       onTap: () {
         setState(() {
           _currentIndex = index;
-          if (index != 0) _deleteMode = false; // Exit delete mode when switching tabs
+          if (index != 0) _deleteMode = false;
         });
       },
       child: Container(
@@ -386,7 +371,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
             ],
           ),
         ),
-        // Filters - equal width 4 columns
+        // Filters
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
@@ -457,7 +442,6 @@ class _EntriesScreenState extends State<EntriesScreen> {
     return GestureDetector(
       onTap: () async {
         if (isDeleteMode && widget.onDelete != null) {
-          // Delete mode: show confirmation
           final confirmed = await showDialog<bool>(
             context: context,
             builder: (context) => AlertDialog(
@@ -480,7 +464,6 @@ class _EntriesScreenState extends State<EntriesScreen> {
             widget.onDelete!(entry['id'] as int);
           }
         } else {
-          // Normal mode: edit
           final result = await Navigator.push<Map<String, String>>(
             context,
             MaterialPageRoute(builder: (_) => EntryFormScreen(entry: entry)),
@@ -502,7 +485,6 @@ class _EntriesScreenState extends State<EntriesScreen> {
         ),
         child: Row(
           children: [
-            // Body
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -684,7 +666,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _loading = false;
   RagService? _rag;
   bool _modelsReady = false;
-  String? _backgroundImagePath; // 背景图片路径
+  String? _backgroundImagePath;
 
   @override
   void initState() {
@@ -696,29 +678,24 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final appDir = await getApplicationDocumentsDirectory();
       
-      // 1. 解包模型
       final unpacked = await AssetUnpacker.unpackIfNeeded(appDir.path);
       if (!unpacked) {
         setState(() => _modelsReady = false);
         return;
       }
       
-      // 2. 初始化 Embedding 服务（真实模型）
       final embedding = EmbeddingService();
       try {
         await embedding.init('${appDir.path}/models/embedding.onnx');
       } catch (e) {
-        // Fallback 到 Mock
-        print('Embedding init failed, using mock: $e');
+        print('Embedding init failed: $e');
       }
       
-      // 3. 初始化 LLM 服务（真实模型）
       final llm = LlmService();
       try {
         await llm.init('${appDir.path}/models/model.gguf');
       } catch (e) {
-        // Fallback 到 Mock
-        print('LLM init failed, using mock: $e');
+        print('LLM init failed: $e');
       }
       
       _rag = RagService(
@@ -761,182 +738,40 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // 背景图片
-        if (_backgroundImagePath != null)
-          Positioned.fill(
-            child: Opacity(
-              opacity: 0.15,
-              child: Image.file(
-                File(_backgroundImagePath!),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-        // 主内容
-        Column(
-          children: [
-            if (_messages.isEmpty)
-              Expanded(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        _modelsReady ? '模型就绪，可以提问' : '正在加载模型...',
-                        style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 14),
-                      ),
-                  const SizedBox(height: 24),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    alignment: WrapAlignment.center,
-                    children: [
-                      _suggestion('我身高体重多少？'),
-                      _suggestion('饮食偏好'),
-                      _suggestion('这周安排'),
-                      _suggestion('生理期'),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          )
-        else
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _messages.length,
-              itemBuilder: (_, i) {
-                final m = _messages[i];
-                final isUser = m['role'] == 'user';
-                final refs = m['refs'] ?? '';
-                
-                return Align(
-                  alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(12),
-                    constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.82),
-                    decoration: BoxDecoration(
-                      color: isUser ? const Color(0xFF0a84ff) : const Color(0xFF1c1c1e),
-                      borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(18),
-                        topRight: const Radius.circular(18),
-                        bottomLeft: Radius.circular(isUser ? 18 : 6),
-                        bottomRight: Radius.circular(isUser ? 6 : 18),
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(m['content']!,
-                            style: TextStyle(fontSize: 14, color: isUser ? Colors.white : Colors.white.withOpacity(0.9))),
-                        if (!isUser && refs.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF0a84ff).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text('来源: $refs',
-                                style: TextStyle(fontSize: 11, color: const Color(0xFF0a84ff).withOpacity(0.8))),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        if (_loading)
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: SizedBox(
-              width: 20, height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2, color: const Color(0xFF0a84ff)),
-            ),
-          ),
-        Container(
-          padding: EdgeInsets.fromLTRB(16, 10, 16, MediaQuery.of(context).padding.bottom + 10),
-          decoration: const BoxDecoration(
-            border: Border(top: BorderSide(color: Color(0xFF38383a), width: 0.5)),
-          ),
-          child: Row(children: [
-            Expanded(
-              child: TextField(
-                controller: _inputCtrl,
-                style: const TextStyle(fontSize: 16, color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: '根据我的资料回答…',
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
-                  filled: true,
-                  fillColor: const Color(0xFF1c1c1e),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                ),
-                onSubmitted: (_) => _send(),
-              ),
-            ),
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: _send,
-              child: Container(
-                width: 44, height: 44,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF0a84ff),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.arrow_upward, color: Colors.white, size: 20),
-              ),
-            ),
-          ],
-        ), // Column
-        // 设置按钮
-        Positioned(
-          right: 16,
-          top: 8,
-          child: GestureDetector(
-            onTap: _showSettingsSheet,
-            child: Container(
-              width: 38, height: 38,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF2c2c2e), Color(0xFF1c1c1e)]),
-                borderRadius: BorderRadius.circular(19),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 3, offset: const Offset(0, 1))],
-                border: Border.all(color: Colors.white.withOpacity(0.08), width: 0.5),
-              ),
-              child: const Icon(Icons.settings_outlined, color: Color(0xFF0a84ff), size: 20),
-            ),
-          ),
-        ),
-      ],
-    );
+  Future<void> _pickImage() async {
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+      
+      if (pickedFile != null) {
+        setState(() => _backgroundImagePath = pickedFile.path);
+        Navigator.pop(context);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('背景已设置')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('选择图片失败: $e')),
+        );
+      }
+    }
   }
 
-  // 背景图片设置弹窗 - 小弹窗居中
-  void _showSettingsSheet() {
+  void _showSettingsDialog() {
     showDialog(
       context: context,
       builder: (context) => Dialog(
         backgroundColor: const Color(0xFF1c1c1e),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // 标题栏
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -948,11 +783,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              // 选择图片按钮
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () => _pickImage(context),
+                  onPressed: _pickImage,
                   icon: const Icon(Icons.upload, size: 18, color: Colors.white),
                   label: const Text('选择图片', style: TextStyle(color: Colors.white, fontSize: 14)),
                   style: ElevatedButton.styleFrom(
@@ -970,9 +804,6 @@ class _ChatScreenState extends State<ChatScreen> {
                     onPressed: () {
                       setState(() => _backgroundImagePath = null);
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('背景已清除')),
-                      );
                     },
                     icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFFff453a)),
                     label: const Text('清除背景', style: TextStyle(color: Color(0xFFff453a), fontSize: 14)),
@@ -991,23 +822,168 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Future<void> _pickImage(BuildContext context) async {
-    try {
-      final picker = ImagePicker();
-      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-      
-      if (pickedFile != null) {
-        setState(() => _backgroundImagePath = pickedFile.path);
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('背景已设置')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('选择图片失败: $e')),
-      );
-    }
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        // Background image layer
+        if (_backgroundImagePath != null)
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.15,
+              child: Image.file(
+                File(_backgroundImagePath!),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+        // Chat content layer
+        Column(
+          children: [
+            if (_messages.isEmpty)
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _modelsReady ? '模型就绪，可以提问' : '正在加载模型...',
+                        style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 14),
+                      ),
+                      const SizedBox(height: 24),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        alignment: WrapAlignment.center,
+                        children: [
+                          _suggestion('我身高体重多少？'),
+                          _suggestion('饮食偏好'),
+                          _suggestion('这周安排'),
+                          _suggestion('生理期'),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _messages.length,
+                  itemBuilder: (_, i) {
+                    final m = _messages[i];
+                    final isUser = m['role'] == 'user';
+                    final refs = m['refs'] ?? '';
+                    
+                    return Align(
+                      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(12),
+                        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.82),
+                        decoration: BoxDecoration(
+                          color: isUser ? const Color(0xFF0a84ff) : const Color(0xFF1c1c1e),
+                          borderRadius: BorderRadius.only(
+                            topLeft: const Radius.circular(18),
+                            topRight: const Radius.circular(18),
+                            bottomLeft: Radius.circular(isUser ? 18 : 6),
+                            bottomRight: Radius.circular(isUser ? 6 : 18),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(m['content']!,
+                                style: TextStyle(fontSize: 14, color: isUser ? Colors.white : Colors.white.withOpacity(0.9))),
+                            if (!isUser && refs.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF0a84ff).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text('来源: $refs',
+                                    style: TextStyle(fontSize: 11, color: const Color(0xFF0a84ff).withOpacity(0.8))),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            if (_loading)
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: SizedBox(
+                  width: 20, height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: const Color(0xFF0a84ff)),
+                ),
+              ),
+            // Input bar
+            Container(
+              padding: EdgeInsets.fromLTRB(16, 10, 16, MediaQuery.of(context).padding.bottom + 10),
+              decoration: const BoxDecoration(
+                border: Border(top: BorderSide(color: Color(0xFF38383a), width: 0.5)),
+              ),
+              child: Row(children: [
+                Expanded(
+                  child: TextField(
+                    controller: _inputCtrl,
+                    style: const TextStyle(fontSize: 16, color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: '根据我的资料回答…',
+                      hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                      filled: true,
+                      fillColor: const Color(0xFF1c1c1e),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    ),
+                    onSubmitted: (_) => _send(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: _send,
+                  child: Container(
+                    width: 44, height: 44,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF0a84ff),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.arrow_upward, color: Colors.white, size: 20),
+                  ),
+                ),
+              ]),
+            ),
+          ],
+        ),
+        // Settings button
+        Positioned(
+          right: 16,
+          top: 8,
+          child: GestureDetector(
+            onTap: _showSettingsDialog,
+            child: Container(
+              width: 38, height: 38,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF2c2c2e), Color(0xFF1c1c1e)]),
+                borderRadius: BorderRadius.circular(19),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 3, offset: const Offset(0, 1))],
+                border: Border.all(color: Colors.white.withOpacity(0.08), width: 0.5),
+              ),
+              child: const Icon(Icons.settings_outlined, color: Color(0xFF0a84ff), size: 20),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _suggestion(String text) {
