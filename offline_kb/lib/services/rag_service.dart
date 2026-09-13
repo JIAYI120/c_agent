@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'embedding_service.dart';
 import 'retrieval_service.dart';
 import 'llm_service.dart';

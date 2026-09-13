@@ -1,35 +1,102 @@
-import 'dart:typed_data';
 import 'dart:math';
+import 'package:flutter_onnxruntime/flutter_onnxruntime.dart';
 
-/// Embedding 服务接口
-/// 将文本转换为固定长度的向量（384维）
-abstract class EmbeddingService {
-  Future<void> init(String modelPath);
-  Future<List<double>> embed(String text);
-  Future<List<List<double>>> embedBatch(List<String> texts);
-  void dispose();
+/// Embedding 服务
+/// 使用 ONNX Runtime 推理 MiniLM 模型
+class EmbeddingService {
+  OnnxRuntime? _runtime;
+  OrtSession? _session;
+  
+  /// 初始化模型
+  Future<void> init(String modelPath) async {
+    _runtime = OnnxRuntime();
+    _session = await _runtime!.createSession(modelPath);
+  }
+  
+  /// 文本转向量（384维）
+  Future<List<double>> embed(String text) async {
+    if (_session == null) throw Exception('Embedding not initialized');
+    
+    // 1. 简单分词（实际应用需用 sentencepiece tokenizer）
+    final tokens = _tokenize(text);
+    
+    // 2. 创建输入张量
+    final inputTensor = await OrtValue.fromList(tokens, [1, tokens.length]);
+    
+    // 3. 推理
+    final outputs = await _session!.run({
+      'input_ids': inputTensor,
+    });
+    
+    // 4. 提取最后一层隐藏状态并做 mean pooling
+    final hidden = await outputs[0]?.asList() as List<List<List<double>>>;
+    final embedding = _meanPooling(hidden, tokens.length);
+    
+    // 5. L2 归一化
+    return _l2Normalize(embedding);
+  }
+  
+  /// 批量向量化
+  Future<List<List<double>>> embedBatch(List<String> texts) async {
+    return Future.wait(texts.map(embed));
+  }
+  
+  /// 简单分词（实际应用需替换为 sentencepiece）
+  List<int> _tokenize(String text) {
+    // MiniLM 使用 BERT tokenizer
+    // 简单实现：按字符转 id（实际需用真实 tokenizer）
+    final chars = text.runes.toList();
+    return [101] + chars.take(510).toList() + [102]; // [CLS] + tokens + [SEP]
+  }
+  
+  /// Mean pooling
+  List<double> _meanPooling(List<List<List<double>>> hidden, int seqLen) {
+    final dim = hidden[0][0].length;
+    final result = List<double>.filled(dim, 0);
+    
+    for (int i = 0; i < seqLen && i < hidden[0].length; i++) {
+      for (int j = 0; j < dim; j++) {
+        result[j] += hidden[0][i][j];
+      }
+    }
+    
+    for (int j = 0; j < dim; j++) {
+      result[j] /= seqLen;
+    }
+    
+    return result;
+  }
+  
+  /// L2 归一化
+  List<double> _l2Normalize(List<double> vector) {
+    final norm = sqrt(vector.fold(0.0, (sum, v) => sum + v * v));
+    if (norm > 0) {
+      for (int i = 0; i < vector.length; i++) {
+        vector[i] /= norm;
+      }
+    }
+    return vector;
+  }
+  
+  /// 释放资源
+  void dispose() {
+    _session?.close();
+    // OnnxRuntime 不需要手动销毁
+  }
 }
 
 /// Mock Embedding 服务（开发测试用）
-/// 使用简单哈希生成伪向量，不依赖真实模型
-class MockEmbeddingService implements EmbeddingService {
-  @override
-  Future<void> init(String modelPath) async {
-    // Mock: 无需初始化
-  }
-
-  @override
+class MockEmbeddingService {
+  Future<void> init(String modelPath) async {}
+  
   Future<List<double>> embed(String text) async {
-    // 简单哈希生成 384 维向量
     final bytes = text.codeUnits;
     final vector = List<double>.filled(384, 0);
     
     for (int i = 0; i < bytes.length; i++) {
-      final idx = i % 384;
-      vector[idx] += bytes[i] / 255.0;
+      vector[i % 384] += bytes[i] / 255.0;
     }
     
-    // L2 归一化
     final norm = sqrt(vector.fold(0.0, (sum, v) => sum + v * v));
     if (norm > 0) {
       for (int i = 0; i < vector.length; i++) {
@@ -39,52 +106,6 @@ class MockEmbeddingService implements EmbeddingService {
     
     return vector;
   }
-
-  @override
-  Future<List<List<double>>> embedBatch(List<String> texts) async {
-    return Future.wait(texts.map(embed));
-  }
-
-  @override
-  void dispose() {
-    // Mock: 无需清理
-  }
-}
-
-/// ONNX Runtime Embedding 服务（真实实现）
-/// 需要 onnxruntime 包和预编译的 libonnxruntime.so
-/// 
-/// 使用方法：
-/// 1. 添加依赖: onnxruntime: ^1.16.0
-/// 2. 准备模型: assets/models/embedding.onnx
-/// 3. 预编译库: android/app/src/main/jniLibs/arm64-v8a/libonnxruntime.so
-class OnnxEmbeddingService implements EmbeddingService {
-  // TODO: 实现真实 ONNX Runtime 调用
-  // 需要:
-  // 1. 加载 ONNX 模型
-  // 2. 实现 tokenizer（或使用 sentencepiece）
-  // 3. 推理并提取最后一层隐藏状态
-  // 4. Mean pooling + L2 归一化
   
-  @override
-  Future<void> init(String modelPath) async {
-    // TODO: 加载 ONNX 模型
-    throw UnimplementedError('需要 ONNX Runtime 预编译库');
-  }
-
-  @override
-  Future<List<double>> embed(String text) async {
-    // TODO: 实现真实推理
-    throw UnimplementedError('需要 ONNX Runtime 预编译库');
-  }
-
-  @override
-  Future<List<List<double>>> embedBatch(List<String> texts) async {
-    return Future.wait(texts.map(embed));
-  }
-
-  @override
-  void dispose() {
-    // TODO: 释放 ONNX 资源
-  }
+  void dispose() {}
 }

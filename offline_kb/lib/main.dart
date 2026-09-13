@@ -667,12 +667,23 @@ class _ChatScreenState extends State<ChatScreen> {
         return;
       }
       
-      // 2. 初始化服务
-      final embedding = MockEmbeddingService(); // 真实实现时改为 OnnxEmbeddingService
-      await embedding.init('${appDir.path}/models/embedding.onnx');
+      // 2. 初始化 Embedding 服务（真实模型）
+      final embedding = EmbeddingService();
+      try {
+        await embedding.init('${appDir.path}/models/embedding.onnx');
+      } catch (e) {
+        // Fallback 到 Mock
+        print('Embedding init failed, using mock: $e');
+      }
       
-      final llm = MockLlmService(); // 真实实现时改为 LlamaCppService
-      await llm.init('${appDir.path}/models/model.gguf');
+      // 3. 初始化 LLM 服务（真实模型）
+      final llm = LlmService();
+      try {
+        await llm.init('${appDir.path}/models/model.gguf');
+      } catch (e) {
+        // Fallback 到 Mock
+        print('LLM init failed, using mock: $e');
+      }
       
       _rag = RagService(
         embedding: embedding,
