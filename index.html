@@ -542,8 +542,11 @@
     .settings-btn:active { transform: scale(0.88); background: rgba(255,255,255,0.10); }
     #screen-chat { 
       position: relative; 
-      display: flex;
+      display: none;
       flex-direction: column;
+    }
+    #screen-chat.active { 
+      display: flex; 
     }
     .chat-bg {
       position: absolute;
