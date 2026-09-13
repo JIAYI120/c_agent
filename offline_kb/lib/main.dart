@@ -12,6 +12,26 @@ import 'services/retrieval_service.dart';
 import 'services/llm_service.dart';
 import 'services/rag_service.dart';
 
+// 应用常量
+class AppConstants {
+  static const topK = 3;
+  static const threshold = 0.25;
+  static const titleMaxLength = 10;
+  static const bodyMaxLength = 50;
+  static const pageSize = 10;
+}
+
+// 颜色常量
+class AppColors {
+  static const primary = Color(0xFF0a84ff);
+  static const surface = Color(0xFF1c1c1e);
+  static const background = Color(0xFF2c2c2e);
+  static const success = Color(0xFF30d158);
+  static const warning = Color(0xFFff9f0a);
+  static const error = Color(0xFFff453a);
+  static const purple = Color(0xFFbf5af2);
+}
+
 void main() {
   runApp(const BeibeiApp());
 }
@@ -326,21 +346,8 @@ class _EntriesScreenState extends State<EntriesScreen> {
     setState(() => _entries = list);
   }
 
-  Future<void> _deleteEntry(int id) async {
-    if (widget.db == null) return;
-    await widget.db!.delete('entries', where: 'id = ?', whereArgs: [id]);
-    _loadEntries();
-  }
-
   List<Map<String, dynamic>> get _filtered =>
       _entries.where((e) => e['category'] == _filter).toList();
-
-  final Map<String, Map<String, dynamic>> _catMeta = {
-    'info': {'name': '信息', 'color': const Color(0xFF0a84ff)},
-    'like': {'name': '喜好', 'color': const Color(0xFF30d158)},
-    'plan': {'name': '日程', 'color': const Color(0xFFff9f0a)},
-    'other': {'name': '其它', 'color': const Color(0xFFbf5af2)},
-  };
 
   @override
   Widget build(BuildContext context) {
@@ -488,7 +495,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
                   Row(children: [
                     _badge(statusText, statusColor),
                     const SizedBox(width: 6),
-                    _badge(entry['updated_at']?.toString().substring(0, 10) ?? '', Colors.white.withOpacity(0.3)),
+                    _badge(_safeSubstring(entry['updated_at'], 10), Colors.white.withOpacity(0.3)),
                   ]),
                 ],
               ),
@@ -509,6 +516,12 @@ class _EntriesScreenState extends State<EntriesScreen> {
       ),
       child: Text(text, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w500)),
     );
+  }
+
+  String _safeSubstring(dynamic value, int length) {
+    if (value == null) return '';
+    final str = value.toString();
+    return str.length > length ? str.substring(0, length) : str;
   }
 }
 

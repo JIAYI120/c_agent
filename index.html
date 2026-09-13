@@ -27,7 +27,7 @@
       --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", sans-serif;
     }
     *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    * { scrollbar-width: none; -ms-overflow-style; }
+    * { scrollbar-width: none; -ms-overflow-style: none; }
     *::-webkit-scrollbar { width: 0; height: 0; display: none; }
     html, body {
       margin: 0; padding: 0; height: 100%;
@@ -804,8 +804,10 @@
         $("#sheetBd").classList.remove("open");
         // 清除表单内容
         $("#fTitle").value = "";
-        $("#fCat").value = "info";
         $("#fBody").value = "";
+        // 重置分类按钮为默认
+        $$(".cat-btn").forEach(b => b.classList.remove("on"));
+        $$(".cat-btn")[0]?.classList.add("on");
       }, 380);
       editingId = null;
     }
@@ -890,7 +892,14 @@
       closeSheet(); renderEntries();
       setTimeout(() => { entries.forEach(e => { if (e.status === "pending") e.status = "ready"; }); renderEntries(); }, 1200);
     });
-    $("#filters").addEventListener("click", ev => { const b = ev.target.closest(".fchip"); if (!b) return; filter = b.dataset.cat; $$(".fchip").forEach(x => x.classList.toggle("on", x === b)); renderEntries(); });
+    $("#filters").addEventListener("click", ev => {
+      const b = ev.target.closest(".fchip");
+      if (!b) return;
+      filter = b.dataset.cat;
+      currentPage = 1; // 切换分类时重置页码
+      $$(".fchip").forEach(x => x.classList.toggle("on", x === b));
+      renderEntries();
+    });
     const meta = { entries: { t: "资料" }, chat: { t: "问答" } };
     $$(".tab").forEach(tab => {
       tab.addEventListener("click", () => {
