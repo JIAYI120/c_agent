@@ -4,6 +4,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'dart:math';
 import 'dart:ui';
+import 'dart:io';
 
 // RAG 服务
 import 'services/asset_unpacker.dart';
@@ -11,6 +12,7 @@ import 'services/embedding_service.dart';
 import 'services/retrieval_service.dart';
 import 'services/llm_service.dart';
 import 'services/rag_service.dart';
+import 'services/embedding_queue.dart';
 
 // 应用常量
 class AppConstants {
@@ -113,6 +115,7 @@ class _MainScreenState extends State<MainScreen> {
   Database? _db;
   final _entriesRefresh = ValueNotifier<int>(0);
   bool _deleteMode = false;
+  EmbeddingQueue? _embeddingQueue;
 
   @override
   void initState() {
@@ -134,6 +137,7 @@ class _MainScreenState extends State<MainScreen> {
             body TEXT NOT NULL,
             category TEXT NOT NULL DEFAULT 'info',
             content_hash TEXT,
+            embedding TEXT,
             embedding_status TEXT DEFAULT 'pending',
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             updated_at TEXT DEFAULT CURRENT_TIMESTAMP
@@ -141,13 +145,30 @@ class _MainScreenState extends State<MainScreen> {
         ''');
       },
     );
+    
+    // 初始化嵌入服务并启动队列
+    await _initEmbeddingQueue();
+    
     setState(() {});
+  }
+
+  Future<void> _initEmbeddingQueue() async {
+    try {
+      final appDir = await getApplicationDocumentsDirectory();
+      final embedding = EmbeddingService();
+      await embedding.init('${appDir.path}/models/embedding.onnx');
+      
+      _embeddingQueue = EmbeddingQueue(db: _db, embedding: embedding);
+      await _embeddingQueue!.start();
+    } catch (e) {
+      // 嵌入服务初始化失败，继续运行（问答功能将不可用）
+      print('Embedding queue init failed: $e');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final titles = ['资料', '问答'];
-    final subs = ['', ''];
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -166,9 +187,6 @@ class _MainScreenState extends State<MainScreen> {
                       children: [
                         Text(titles[_currentIndex],
                             style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: -0.02)),
-                        const SizedBox(height: 4),
-                        Text(subs[_currentIndex],
-                            style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.3))),
                       ],
                     ),
                   ),
@@ -191,6 +209,9 @@ class _MainScreenState extends State<MainScreen> {
                               });
                               _entriesRefresh.value++;
                               setState(() {});
+                              
+                              // 启动嵌入队列
+                              _embeddingQueue?.start();
                             }
                           },
                           child: Container(
@@ -662,6 +683,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _loading = false;
   RagService? _rag;
   bool _modelsReady = false;
+  String? _backgroundImagePath; // 背景图片路径
 
   @override
   void initState() {
@@ -740,18 +762,32 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Stack(
       children: [
-        if (_messages.isEmpty)
-          Expanded(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    _modelsReady ? '模型就绪，可以提问' : '正在加载模型...',
-                    style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 14),
-                  ),
+        // 背景图片
+        if (_backgroundImagePath != null)
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.15,
+              child: Image.file(
+                File(_backgroundImagePath!),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+        // 主内容
+        Column(
+          children: [
+            if (_messages.isEmpty)
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _modelsReady ? '模型就绪，可以提问' : '正在加载模型...',
+                        style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 14),
+                      ),
                   const SizedBox(height: 24),
                   Wrap(
                     spacing: 8,
@@ -861,9 +897,94 @@ class _ChatScreenState extends State<ChatScreen> {
                 child: const Icon(Icons.arrow_upward, color: Colors.white, size: 20),
               ),
             ),
-          ]),
+          ],
+        ),
+        // 设置按钮
+        Positioned(
+          right: 16,
+          top: 8,
+          child: GestureDetector(
+            onTap: _showSettingsSheet,
+            child: Container(
+              width: 38, height: 38,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF2c2c2e), Color(0xFF1c1c1e)]),
+                borderRadius: BorderRadius.circular(19),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 3, offset: const Offset(0, 1))],
+                border: Border.all(color: Colors.white.withOpacity(0.08), width: 0.5),
+              ),
+              child: const Icon(Icons.settings_outlined, color: Color(0xFF0a84ff), size: 20),
+            ),
+          ),
         ),
       ],
+    );
+  }
+
+  // 背景图片设置弹窗
+  void _showSettingsSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1c1c1e),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 拖拽条
+            Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text('背景图片', style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 16),
+            // 选择图片按钮
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () async {
+                  // TODO: 接入 image_picker
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('需要安装 image_picker 包')),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0a84ff),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('选择图片', style: TextStyle(color: Colors.white)),
+              ),
+            ),
+            if (_backgroundImagePath != null) ...[
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () {
+                    setState(() => _backgroundImagePath = null);
+                    Navigator.pop(context);
+                  },
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFFff453a)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('清除背景', style: TextStyle(color: Color(0xFFff453a))),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
