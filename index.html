@@ -677,25 +677,20 @@
     </div>
 
     <!-- 问答设置弹窗 - iOS底部Sheet -->
-    <div class="sheet-backdrop" id="settingsBd"></div>
-    <div class="sheet" id="settingsSheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-header">
-        <button class="cancel" id="settingsClose">取消</button>
-        <h3>问答设置</h3>
-        <button class="save" id="saveSettings">保存</button>
-      </div>
-      <div class="sheet-body">
-        <label class="field">显示名称</label>
-        <input class="f" id="settingsName" placeholder="输入名称" maxlength="20" />
-        <label class="field">背景图片</label>
-        <div style="display: flex; gap: 10px; margin-top: 4px;">
-          <button class="btn" id="uploadBg" style="flex:1; margin:0;">选择图片</button>
-          <button class="btn" id="clearBg" style="flex:1; margin:0;">清除背景</button>
+    <!-- 设置弹窗 - 小弹窗居中 -->
+    <div class="modal-overlay" id="settingsOverlay">
+      <div class="modal" style="width: 75%; max-width: 280px;">
+        <div class="modal-header">
+          <h3>背景图片</h3>
+          <button class="modal-close" id="settingsClose">×</button>
         </div>
-        <input type="file" id="bgFileInput" accept="image/*" style="display:none;" />
+        <div style="padding: 16px;">
+          <button class="btn" id="uploadBg" style="width:100%; margin:0;">选择图片</button>
+          <button class="btn" id="clearBg" style="width:100%; margin-top:8px;">清除背景</button>
+        </div>
       </div>
     </div>
+    <input type="file" id="bgFileInput" accept="image/*" style="display:none;" />
   </div>
   <script>
     const CAT = { info: { name: "信息" }, like: { name: "喜好" }, plan: { name: "日程" }, other: { name: "其它" } };
@@ -828,21 +823,17 @@
     });
 
     // 问答设置
-    let chatName = localStorage.getItem("chatName") || "贝贝";
     let chatBgUrl = localStorage.getItem("chatBgUrl") || "";
     if (chatBgUrl) $("#chatBg").style.backgroundImage = `url(${chatBgUrl})`;
 
     $("#settingsBtn").addEventListener("click", () => {
-      $("#settingsName").value = chatName;
-      $("#settingsBd").classList.add("open");
-      requestAnimationFrame(() => $("#settingsSheet").classList.add("open"));
+      $("#settingsOverlay").classList.add("open");
     });
     function closeSettings() {
-      $("#settingsSheet").classList.remove("open");
-      setTimeout(() => $("#settingsBd").classList.remove("open"), 380);
+      $("#settingsOverlay").classList.remove("open");
     }
     $("#settingsClose").addEventListener("click", closeSettings);
-    $("#settingsBd").addEventListener("click", closeSettings);
+    $("#settingsOverlay").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeSettings(); });
 
     $("#uploadBg").addEventListener("click", () => $("#bgFileInput").click());
     $("#bgFileInput").addEventListener("change", (e) => {
@@ -854,6 +845,7 @@
           $("#chatBg").style.backgroundImage = `url(${chatBgUrl})`;
           localStorage.setItem("chatBgUrl", chatBgUrl);
           toast("背景已更新");
+          closeSettings();
         };
         reader.readAsDataURL(file);
       }
@@ -863,12 +855,7 @@
       $("#chatBg").style.backgroundImage = "none";
       localStorage.removeItem("chatBgUrl");
       toast("背景已清除");
-    });
-    $("#saveSettings").addEventListener("click", () => {
-      chatName = $("#settingsName").value.trim() || "贝贝";
-      localStorage.setItem("chatName", chatName);
       closeSettings();
-      toast("设置已保存");
     });
 
     $("#sheetCancel").addEventListener("click", closeSheet);
