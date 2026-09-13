@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:math';
 import 'dart:ui';
 import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 // RAG 服务
 import 'services/asset_unpacker.dart';
@@ -898,7 +899,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
           ],
-        ),
+        ), // Column
         // 设置按钮
         Positioned(
           right: 16,
