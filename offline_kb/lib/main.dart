@@ -666,21 +666,21 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _loading = false;
   RagService? _rag;
   bool _modelsReady = false;
+  bool _modelsInitializing = false;
   String? _backgroundImagePath;
 
-  @override
-  void initState() {
-    super.initState();
-    _initRag();
-  }
-
-  Future<void> _initRag() async {
+  // 延迟初始化：第一次提问时才加载模型
+  Future<void> _ensureModelsReady() async {
+    if (_rag != null || _modelsInitializing) return;
+    _modelsInitializing = true;
+    
     try {
       final appDir = await getApplicationDocumentsDirectory();
       
       final unpacked = await AssetUnpacker.unpackIfNeeded(appDir.path);
       if (!unpacked) {
         setState(() => _modelsReady = false);
+        _modelsInitializing = false;
         return;
       }
       
@@ -708,11 +708,22 @@ class _ChatScreenState extends State<ChatScreen> {
     } catch (e) {
       setState(() => _modelsReady = false);
     }
+    _modelsInitializing = false;
   }
 
   Future<void> _send() async {
     final q = _inputCtrl.text.trim();
-    if (q.isEmpty || _loading || _rag == null) return;
+    if (q.isEmpty || _loading) return;
+
+    // 首次提问时延迟加载模型
+    await _ensureModelsReady();
+    
+    if (_rag == null) {
+      setState(() {
+        _messages.add({'role': 'bot', 'content': '模型加载失败，请检查模型文件是否存在'});
+      });
+      return;
+    }
 
     setState(() {
       _messages.add({'role': 'user', 'content': q});
@@ -847,7 +858,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        _modelsReady ? '模型就绪，可以提问' : '正在加载模型...',
+                        _modelsReady ? '输入问题开始对话' : '第一次提问时加载模型',
                         style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 14),
                       ),
                       const SizedBox(height: 24),
