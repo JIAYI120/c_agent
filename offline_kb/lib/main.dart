@@ -5,6 +5,13 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:math';
 import 'dart:ui';
 
+// RAG 服务
+import 'services/asset_unpacker.dart';
+import 'services/embedding_service.dart';
+import 'services/retrieval_service.dart';
+import 'services/llm_service.dart';
+import 'services/rag_service.dart';
+
 void main() {
   runApp(const BeibeiApp());
 }
@@ -640,26 +647,48 @@ class _ChatScreenState extends State<ChatScreen> {
   final _inputCtrl = TextEditingController();
   final List<Map<String, String>> _messages = [];
   bool _loading = false;
+  RagService? _rag;
+  bool _modelsReady = false;
 
-  Future<List<Map<String, dynamic>>> _retrieve(String query) async {
-    if (widget.db == null) return [];
-    final entries = await widget.db!.query('entries', where: "embedding_status = 'ready'");
-    if (entries.isEmpty) return [];
+  @override
+  void initState() {
+    super.initState();
+    _initRag();
+  }
 
-    final scored = entries.map((e) {
-      final text = '${e['title']} ${e['body']}'.toLowerCase();
-      final chars = query.toLowerCase().split('').toSet();
-      final hits = chars.where((c) => text.contains(c)).length;
-      return {'entry': e, 'score': chars.isEmpty ? 0.0 : hits / chars.length};
-    }).where((x) => (x['score'] as double) >= 0.25).toList()
-      ..sort((a, b) => (b['score'] as double).compareTo(a['score'] as double));
-
-    return scored.take(2).map((x) => x['entry'] as Map<String, dynamic>).toList();
+  Future<void> _initRag() async {
+    try {
+      final appDir = await getApplicationDocumentsDirectory();
+      
+      // 1. 解包模型
+      final unpacked = await AssetUnpacker.unpackIfNeeded(appDir.path);
+      if (!unpacked) {
+        setState(() => _modelsReady = false);
+        return;
+      }
+      
+      // 2. 初始化服务
+      final embedding = MockEmbeddingService(); // 真实实现时改为 OnnxEmbeddingService
+      await embedding.init('${appDir.path}/models/embedding.onnx');
+      
+      final llm = MockLlmService(); // 真实实现时改为 LlamaCppService
+      await llm.init('${appDir.path}/models/model.gguf');
+      
+      _rag = RagService(
+        embedding: embedding,
+        llm: llm,
+        retrieval: RetrievalService(widget.db),
+      );
+      
+      setState(() => _modelsReady = true);
+    } catch (e) {
+      setState(() => _modelsReady = false);
+    }
   }
 
   Future<void> _send() async {
     final q = _inputCtrl.text.trim();
-    if (q.isEmpty || _loading) return;
+    if (q.isEmpty || _loading || _rag == null) return;
 
     setState(() {
       _messages.add({'role': 'user', 'content': q});
@@ -667,23 +696,22 @@ class _ChatScreenState extends State<ChatScreen> {
       _inputCtrl.clear();
     });
 
-    await Future.delayed(Duration(milliseconds: 600 + Random().nextInt(400)));
-
-    final hits = await _retrieve(q);
-    String answer;
-    if (hits.isEmpty) {
-      answer = '暂无相关个人资料';
-    } else {
-      answer = '根据你的资料：\n';
-      for (final h in hits) {
-        answer += '\n【${h['title']}】${h['body']}\n';
-      }
+    try {
+      final result = await _rag!.ask(q);
+      setState(() {
+        _messages.add({
+          'role': 'bot',
+          'content': result.answer,
+          'refs': result.references.map((r) => r.title).join(','),
+        });
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _messages.add({'role': 'bot', 'content': '回答出错：$e'});
+        _loading = false;
+      });
     }
-
-    setState(() {
-      _messages.add({'role': 'bot', 'content': answer});
-      _loading = false;
-    });
   }
 
   @override
@@ -693,15 +721,25 @@ class _ChatScreenState extends State<ChatScreen> {
         if (_messages.isEmpty)
           Expanded(
             child: Center(
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                alignment: WrapAlignment.center,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _suggestion('我身高体重多少？'),
-                  _suggestion('饮食偏好'),
-                  _suggestion('这周安排'),
-                  _suggestion('生理期'),
+                  Text(
+                    _modelsReady ? '模型就绪，可以提问' : '正在加载模型...',
+                    style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 14),
+                  ),
+                  const SizedBox(height: 24),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      _suggestion('我身高体重多少？'),
+                      _suggestion('饮食偏好'),
+                      _suggestion('这周安排'),
+                      _suggestion('生理期'),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -714,6 +752,8 @@ class _ChatScreenState extends State<ChatScreen> {
               itemBuilder: (_, i) {
                 final m = _messages[i];
                 final isUser = m['role'] == 'user';
+                final refs = m['refs'] ?? '';
+                
                 return Align(
                   alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
                   child: Container(
@@ -729,8 +769,25 @@ class _ChatScreenState extends State<ChatScreen> {
                         bottomRight: Radius.circular(isUser ? 6 : 18),
                       ),
                     ),
-                    child: Text(m['content']!,
-                        style: TextStyle(fontSize: 14, color: isUser ? Colors.white : Colors.white.withOpacity(0.9))),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(m['content']!,
+                            style: TextStyle(fontSize: 14, color: isUser ? Colors.white : Colors.white.withOpacity(0.9))),
+                        if (!isUser && refs.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0a84ff).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text('来源: $refs',
+                                style: TextStyle(fontSize: 11, color: const Color(0xFF0a84ff).withOpacity(0.8))),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
                 );
               },

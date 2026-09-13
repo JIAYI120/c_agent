@@ -28,6 +28,9 @@ dependencies:
   sqflite: ^2.4.2
   path: ^1.9.0
   path_provider: ^2.1.5
+  # RAG 服务依赖（真实实现时启用）
+  # onnxruntime: ^1.16.0  # Embedding 推理
+  # ffi: ^2.1.0           # llama.cpp FFI
 
 dev_dependencies:
   flutter_test:
