@@ -677,25 +677,37 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final appDir = await getApplicationDocumentsDirectory();
       
-      final unpacked = await AssetUnpacker.unpackIfNeeded(appDir.path);
-      if (!unpacked) {
+      // 1. 解包模型
+      try {
+        final unpacked = await AssetUnpacker.unpackIfNeeded(appDir.path);
+        if (!unpacked) {
+          setState(() => _modelsReady = false);
+          _modelsInitializing = false;
+          return;
+        }
+      } catch (e) {
+        print('Asset unpack failed: $e');
         setState(() => _modelsReady = false);
         _modelsInitializing = false;
         return;
       }
       
+      // 2. 初始化 Embedding 服务
       final embedding = EmbeddingService();
       try {
         await embedding.init('${appDir.path}/models/embedding.onnx');
       } catch (e) {
         print('Embedding init failed: $e');
+        // 不阻止继续，使用 Mock
       }
       
+      // 3. 初始化 LLM 服务（最可能崩溃的部分）
       final llm = LlmService();
       try {
         await llm.init('${appDir.path}/models/model.gguf');
       } catch (e) {
         print('LLM init failed: $e');
+        // 不阻止继续，使用 Mock
       }
       
       _rag = RagService(
@@ -706,6 +718,7 @@ class _ChatScreenState extends State<ChatScreen> {
       
       setState(() => _modelsReady = true);
     } catch (e) {
+      print('RAG init failed: $e');
       setState(() => _modelsReady = false);
     }
     _modelsInitializing = false;
@@ -715,21 +728,30 @@ class _ChatScreenState extends State<ChatScreen> {
     final q = _inputCtrl.text.trim();
     if (q.isEmpty || _loading) return;
 
-    // 首次提问时延迟加载模型
-    await _ensureModelsReady();
-    
-    if (_rag == null) {
-      setState(() {
-        _messages.add({'role': 'bot', 'content': '模型加载失败，请检查模型文件是否存在'});
-      });
-      return;
-    }
-
     setState(() {
       _messages.add({'role': 'user', 'content': q});
       _loading = true;
       _inputCtrl.clear();
     });
+
+    // 首次提问时延迟加载模型
+    try {
+      await _ensureModelsReady();
+    } catch (e) {
+      setState(() {
+        _messages.add({'role': 'bot', 'content': '模型加载失败: $e'});
+        _loading = false;
+      });
+      return;
+    }
+    
+    if (_rag == null) {
+      setState(() {
+        _messages.add({'role': 'bot', 'content': '模型初始化失败，可能原因：\n1. 模型文件不存在\n2. 手机内存不足\n3. 模型文件损坏'});
+        _loading = false;
+      });
+      return;
+    }
 
     try {
       final result = await _rag!.ask(q);
@@ -743,7 +765,7 @@ class _ChatScreenState extends State<ChatScreen> {
       });
     } catch (e) {
       setState(() {
-        _messages.add({'role': 'bot', 'content': '回答出错：$e'});
+        _messages.add({'role': 'bot', 'content': '回答出错: $e'});
         _loading = false;
       });
     }
