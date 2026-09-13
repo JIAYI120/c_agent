@@ -922,71 +922,92 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  // 背景图片设置弹窗
+  // 背景图片设置弹窗 - 小弹窗居中
   void _showSettingsSheet() {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      backgroundColor: const Color(0xFF1c1c1e),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // 拖拽条
-            Container(
-              width: 40, height: 4,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(2),
+      builder: (context) => Dialog(
+        backgroundColor: const Color(0xFF1c1c1e),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 标题栏
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('背景图片', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close, color: Color(0xFF0a84ff), size: 20),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 16),
-            const Text('背景图片', style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 16),
-            // 选择图片按钮
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () async {
-                  // TODO: 接入 image_picker
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('需要安装 image_picker 包')),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0a84ff),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: const Text('选择图片', style: TextStyle(color: Colors.white)),
-              ),
-            ),
-            if (_backgroundImagePath != null) ...[
-              const SizedBox(height: 10),
+              const SizedBox(height: 16),
+              // 选择图片按钮
               SizedBox(
                 width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () {
-                    setState(() => _backgroundImagePath = null);
-                    Navigator.pop(context);
-                  },
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFFff453a)),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                child: ElevatedButton.icon(
+                  onPressed: () => _pickImage(context),
+                  icon: const Icon(Icons.upload, size: 18, color: Colors.white),
+                  label: const Text('选择图片', style: TextStyle(color: Colors.white, fontSize: 14)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2c2c2e),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text('清除背景', style: TextStyle(color: Color(0xFFff453a))),
                 ),
               ),
+              if (_backgroundImagePath != null) ...[
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      setState(() => _backgroundImagePath = null);
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('背景已清除')),
+                      );
+                    },
+                    icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFFff453a)),
+                    label: const Text('清除背景', style: TextStyle(color: Color(0xFFff453a), fontSize: 14)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFff453a).withOpacity(0.08),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
+  }
+
+  Future<void> _pickImage(BuildContext context) async {
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+      
+      if (pickedFile != null) {
+        setState(() => _backgroundImagePath = pickedFile.path);
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('背景已设置')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('选择图片失败: $e')),
+      );
+    }
   }
 
   Widget _suggestion(String text) {
